@@ -10,24 +10,23 @@ import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
+import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSuiteScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
-import org.lazy.wanandroid.feature.home.navigation.homeEntry
-import org.lazy.wanandroid.feature.navigation.navigation.navigationEntry
-import org.lazy.wanandroid.feature.project.navigation.projectEntry
+import org.koin.compose.navigation3.koinEntryProvider
+import org.koin.core.annotation.KoinExperimentalAPI
+import org.lazy.wanandroid.di.initKoin
 import org.lazy.wanandroid.feature.rememberAppState
-import org.lazy.wanandroid.feature.settings.navigation.settingsEntry
-import org.lazy.wanandroid.feature.wechat.navigation.weChatEntry
+import org.lazy.wanandroid.navigation.LocalNavigator
 import org.lazy.wanandroid.navigation.Navigator
 import org.lazy.wanandroid.navigation.TOP_LEVEL_NAV_ITEMS
 import org.lazy.wanandroid.navigation.toEntries
 
-@Preview
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun App(windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo()) {
     MaterialTheme {
@@ -35,7 +34,10 @@ fun App(windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo()) {
 
         val navigator = remember { Navigator(appState.navigationState) }
 
-        val layoutType = NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(windowAdaptiveInfo)
+        val navigatorState = rememberNavigationSuiteScaffoldState()
+
+        val layoutType =
+            NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(windowAdaptiveInfo)
 
         NavigationSuiteScaffold(
             navigationSuiteItems = {
@@ -51,30 +53,29 @@ fun App(windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo()) {
                     })
                 }
             },
-            layoutType = layoutType
+            layoutType = layoutType,
+            state = navigatorState
         ) {
             Scaffold(
-                containerColor = Color.Transparent,
-                contentColor = MaterialTheme.colorScheme.onBackground,
                 snackbarHost = {
 
                 }
             ) { innerPadding ->
-
-                val entryProvider = entryProvider {
-                    homeEntry()
-                    navigationEntry()
-                    projectEntry()
-                    weChatEntry()
-                    settingsEntry()
+                CompositionLocalProvider(LocalNavigator provides navigator) {
+                    NavDisplay(
+                        entries = appState.navigationState.toEntries(koinEntryProvider()),
+                        modifier = Modifier.fillMaxSize().padding(innerPadding),
+                        onBack = { navigator.goBack() }
+                    )
                 }
-
-                NavDisplay(
-                    modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    entries = appState.navigationState.toEntries(entryProvider),
-                    onBack = { navigator.goBack() },
-                )
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun AppPreview() {
+    initKoin()
+    App()
 }

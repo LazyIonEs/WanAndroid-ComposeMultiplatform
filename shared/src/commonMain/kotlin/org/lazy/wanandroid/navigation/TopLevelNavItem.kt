@@ -12,6 +12,7 @@ import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.ViewAgenda
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation3.runtime.NavKey
 import org.lazy.wanandroid.feature.home.navigation.HomeNavKey
 import org.lazy.wanandroid.feature.navigation.navigation.NavigationNavKey
 import org.lazy.wanandroid.feature.project.navigation.ProjectNavKey
@@ -54,7 +55,7 @@ val SETTINGS = TopLevelNavItem(
     iconText = "设置",
 )
 
-val TOP_LEVEL_NAV_ITEMS = mapOf(
+val TOP_LEVEL_NAV_ITEMS: Map<NavKey, TopLevelNavItem> = mapOf(
     HomeNavKey to HOME,
     NavigationNavKey to NAVIGATION,
     ProjectNavKey to PROJECT,

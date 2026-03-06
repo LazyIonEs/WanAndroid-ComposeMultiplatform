@@ -1,11 +1,13 @@
 package org.lazy.wanandroid.feature.project.navigation
 
-import androidx.navigation3.runtime.EntryProviderScope
-import androidx.navigation3.runtime.NavKey
+import org.koin.core.annotation.KoinExperimentalAPI
+import org.koin.dsl.module
+import org.koin.dsl.navigation3.navigation
 import org.lazy.wanandroid.feature.project.ProjectScreen
 
-fun EntryProviderScope<NavKey>.projectEntry() {
-    entry<ProjectNavKey> {
+@OptIn(KoinExperimentalAPI::class)
+val projectEntry = module {
+    navigation<ProjectNavKey> { route ->
         ProjectScreen()
     }
 }

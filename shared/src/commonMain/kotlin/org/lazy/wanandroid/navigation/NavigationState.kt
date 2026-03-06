@@ -16,7 +16,6 @@
 
 package org.lazy.wanandroid.navigation
 
-import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -29,18 +28,32 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
+import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.runtime.serialization.NavBackStackSerializer
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.serialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.encoding.decodeStructure
-import kotlinx.serialization.encoding.encodeStructure
-import kotlinx.serialization.serializer
+import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.PolymorphicSerializer
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.plus
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
+import org.lazy.wanandroid.feature.home.navigation.HomeNavKey
+import org.lazy.wanandroid.feature.home.navigation.homeSerializersModule
+import org.lazy.wanandroid.feature.navigation.navigation.NavigationNavKey
+import org.lazy.wanandroid.feature.project.navigation.ProjectNavKey
+import org.lazy.wanandroid.feature.settings.navigation.SettingsNavKey
+import org.lazy.wanandroid.feature.wechat.navigation.WeChatNavKey
+
+val config = SavedStateConfiguration {
+    serializersModule = homeSerializersModule + SerializersModule {
+        polymorphic(NavKey::class) {
+            subclass(NavigationNavKey::class)
+            subclass(ProjectNavKey::class)
+            subclass(WeChatNavKey::class)
+            subclass(SettingsNavKey::class)
+        }
+    }
+}
 
 /**
  * Create a navigation state that persists config changes and process death.
@@ -50,8 +63,18 @@ fun rememberNavigationState(
     startKey: NavKey,
     topLevelKeys: Set<NavKey>,
 ): NavigationState {
-    val topLevelStack = rememberNavBackStack(startKey)
-    val subStacks = topLevelKeys.associateWith { key -> rememberNavBackStack(key) }
+
+    val topLevelStack = rememberSerializable(
+        startKey, topLevelKeys,
+        configuration = config,
+        serializer = NavBackStackSerializer(PolymorphicSerializer(NavKey::class)),
+    ) {
+        NavBackStack(startKey)
+    }
+
+    val subStacks = topLevelKeys.associateWith { key ->
+        rememberNavBackStack(config, key)
+    }
 
     return remember(startKey, topLevelKeys) {
         NavigationState(
@@ -79,12 +102,10 @@ class NavigationState(
     val topLevelKeys
         get() = subStacks.keys
 
-    @get:VisibleForTesting
     val currentSubStack: NavBackStack<NavKey>
         get() = subStacks[currentTopLevelKey]
             ?: error("Sub stack for $currentTopLevelKey does not exist")
 
-    @get:VisibleForTesting
     val currentKey: NavKey by derivedStateOf { currentSubStack.last() }
 }
 
@@ -110,59 +131,4 @@ fun NavigationState.toEntries(
     return topLevelStack
         .flatMap { decoratedEntries[it] ?: emptyList() }
         .toMutableStateList()
-}
-
-// 临时使用 navigation3.runtime
-@Composable
-private fun rememberNavBackStack(vararg elements: NavKey): NavBackStack<NavKey> {
-    return rememberSerializable(
-        serializer = NavBackStackSerializer(elementSerializer = NavKeySerializer())
-    ) {
-        NavBackStack(*elements)
-    }
-}
-
-@OptIn(InternalSerializationApi::class)
-private open class NavKeySerializer<T : NavKey> : KSerializer<T> {
-
-    override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor(serialName = "androidx.navigation.runtime.NavKey") {
-            element(elementName = "type", descriptor = serialDescriptor<String>())
-            element(
-                elementName = "value",
-                descriptor = buildClassSerialDescriptor(serialName = "Any"),
-            )
-        }
-
-    /**
-     * Deserializes a concrete [NavKey] implementation.
-     *
-     * It first reads the class name (`type`), then uses that name to find the corresponding
-     * [KSerializer] for the class using **reflection**. Finally, it uses that specific serializer
-     * to read the actual object data (`value`).
-     */
-    @Suppress("UNCHECKED_CAST")
-    override fun deserialize(decoder: Decoder): T {
-        return decoder.decodeStructure(descriptor) {
-            val className = decodeStringElement(descriptor, decodeElementIndex(descriptor))
-            val serializer = Class.forName(className).kotlin.serializer()
-            decodeSerializableElement(descriptor, decodeElementIndex(descriptor), serializer) as T
-        }
-    }
-
-    /**
-     * Serializes a concrete [NavKey] implementation.
-     *
-     * It writes the object's fully qualified class name (`type`) first, then uses the object's
-     * runtime serializer to write the object's data (`value`).
-     */
-    @Suppress("UNCHECKED_CAST")
-    override fun serialize(encoder: Encoder, value: T) {
-        encoder.encodeStructure(descriptor) {
-            val className = value::class.java.name
-            encodeStringElement(descriptor, index = 0, className)
-            val serializer = value::class.serializer() as KSerializer<T>
-            encodeSerializableElement(descriptor, index = 1, serializer, value)
-        }
-    }
 }

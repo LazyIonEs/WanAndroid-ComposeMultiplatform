@@ -1,11 +1,13 @@
 package org.lazy.wanandroid.feature.settings.navigation
 
-import androidx.navigation3.runtime.EntryProviderScope
-import androidx.navigation3.runtime.NavKey
+import org.koin.core.annotation.KoinExperimentalAPI
+import org.koin.dsl.module
+import org.koin.dsl.navigation3.navigation
 import org.lazy.wanandroid.feature.settings.SettingsScreen
 
-fun EntryProviderScope<NavKey>.settingsEntry() {
-    entry<SettingsNavKey> {
+@OptIn(KoinExperimentalAPI::class)
+val settingsEntry = module {
+    navigation<SettingsNavKey> { route ->
         SettingsScreen()
     }
 }

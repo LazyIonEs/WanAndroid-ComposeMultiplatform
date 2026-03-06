@@ -5,4 +5,4 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-object NavigationNavKey: NavKey
+data object NavigationNavKey : NavKey

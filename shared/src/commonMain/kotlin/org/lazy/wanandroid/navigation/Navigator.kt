@@ -16,7 +16,12 @@
 
 package org.lazy.wanandroid.navigation
 
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.navigation3.runtime.NavKey
+
+val LocalNavigator = staticCompositionLocalOf<Navigator> {
+    error("No Navigator provided")
+}
 
 /**
  * Handles navigation events (forward and back) by updating the navigation state.

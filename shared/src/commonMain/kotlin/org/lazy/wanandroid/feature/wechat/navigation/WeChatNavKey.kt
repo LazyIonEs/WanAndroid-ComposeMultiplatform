@@ -5,4 +5,4 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-object WeChatNavKey: NavKey
+data object WeChatNavKey : NavKey
