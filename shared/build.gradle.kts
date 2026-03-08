@@ -15,6 +15,7 @@ kotlin {
         namespace = "org.lazy.wanandroid.library"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
+        androidResources.enable = true
 
         compilerOptions {
             jvmTarget = JvmTarget.JVM_17
@@ -116,6 +117,21 @@ kotlin {
             implementation(libs.ktor.client.js)
         }
     }
+}
+
+compose.resources {
+    customDirectory(
+        sourceSetName = "wasmJsMain",
+        directoryProvider = provider {
+            layout.projectDirectory.dir("webResources")
+        }
+    )
+    customDirectory(
+        sourceSetName = "jsMain",
+        directoryProvider = provider {
+            layout.projectDirectory.dir("webResources")
+        }
+    )
 }
 
 dependencies {

@@ -6,6 +6,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.Typography
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
@@ -28,8 +29,11 @@ import org.lazy.wanandroid.navigation.toEntries
 
 @OptIn(KoinExperimentalAPI::class)
 @Composable
-fun App(windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo()) {
-    MaterialTheme {
+fun App(
+    windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo(),
+    typography: Typography = MaterialTheme.typography
+) {
+    MaterialTheme(typography = typography) {
         val appState = rememberAppState()
 
         val navigator = remember { Navigator(appState.navigationState) }

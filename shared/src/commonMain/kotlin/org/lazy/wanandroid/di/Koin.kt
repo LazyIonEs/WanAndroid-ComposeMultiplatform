@@ -13,12 +13,11 @@ import kotlinx.serialization.json.Json
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.includes
 import org.koin.dsl.module
 import org.koin.plugin.module.dsl.create
-import org.koin.plugin.module.dsl.single
-import org.koin.plugin.module.dsl.viewModel
 import org.lazy.wanandroid.core.data.repository.HomeRepository
 import org.lazy.wanandroid.core.network.NetworkDataSource
 import org.lazy.wanandroid.feature.home.HomeViewModel
@@ -30,13 +29,13 @@ import org.lazy.wanandroid.feature.wechat.navigation.weChatEntry
 import org.lazy.wanandroid.httpClient
 
 val viewModelModule = module {
-    viewModel<HomeViewModel>()
+    viewModel { HomeViewModel(get()) }
 }
 
 val dataModule = module {
     single { create(::buildClient) }
-    single<NetworkDataSource>()
-    single<HomeRepository>()
+    single { NetworkDataSource(get()) }
+    single { HomeRepository(get()) }
 }
 
 private fun buildClient(): HttpClient {
