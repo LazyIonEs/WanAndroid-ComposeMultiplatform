@@ -2,18 +2,12 @@ package org.lazy.wanandroid.feature.home
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
@@ -26,86 +20,131 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import org.koin.compose.viewmodel.koinViewModel
+import org.lazy.wanandroid.common.defaultTransition
+import org.lazy.wanandroid.common.listEnterTransition
+import org.lazy.wanandroid.core.network.model.Article
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun HomeScreen(
     onTopicClick: () -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        val lazyPagingItems = viewModel.articleListFlow.collectAsLazyPagingItems()
-        AnimatedContent(
-            targetState = lazyPagingItems.loadState.refresh,
-            transitionSpec = {
-                if (initialState == LoadState.Loading && targetState is LoadState.NotLoading) {
-                    val enterTransition = slideInVertically(
-                        initialOffsetY = { fullHeight -> fullHeight / 2 },
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioLowBouncy,
-                            stiffness = Spring.StiffnessLow,
-                        )
-                    ) + fadeIn(animationSpec = tween())
-                    val exitTransition = fadeOut(animationSpec = tween())
-                    enterTransition togetherWith exitTransition
-                } else {
-                    fadeIn(animationSpec = tween()) togetherWith fadeOut(animationSpec = tween())
-                }
-            }) { loadState ->
-            when (loadState) {
-                is LoadState.Loading -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    ContainedLoadingIndicator()
-                }
+    val lazyPagingItems = viewModel.articleListFlow.collectAsLazyPagingItems()
+    val refreshState = lazyPagingItems.loadState.refresh
+    HomeScreen(
+        lazyPagingItems = lazyPagingItems,
+        refreshState = refreshState,
+        onTopicClick = onTopicClick,
+        retry = { lazyPagingItems.retry() }
+    )
+}
 
-                is LoadState.Error -> Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "Error: ${loadState.error.message ?: "Unknown error"}")
-                    Button(
-                        onClick = { lazyPagingItems.retry() },
-                        modifier = Modifier.padding(top = 8.dp)
-                    ) {
-                        Text("Retry")
-                    }
-                }
+@Composable
+internal fun HomeScreen(
+    lazyPagingItems: LazyPagingItems<Article>,
+    refreshState: LoadState,
+    onTopicClick: () -> Unit,
+    retry: () -> Unit
+) {
+    AnimatedContent(
+        modifier = Modifier.fillMaxSize(),
+        targetState = refreshState,
+        transitionSpec = {
+            if (initialState == LoadState.Loading && targetState is LoadState.NotLoading) {
+                listEnterTransition()
+            } else {
+                defaultTransition()
+            }
+        },
+        contentAlignment = Alignment.Center
+    ) { loadState ->
+        when (loadState) {
+            is LoadState.Loading -> HomeScreenContainedLoading()
+            is LoadState.Error -> {
+                val error = loadState.error.message ?: "Unknown error"
+                HomeScreenError(error, retry)
+            }
+            else -> HomeScreenContent(lazyPagingItems)
+        }
+    }
+}
 
-                else -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    items(
-                        count = lazyPagingItems.itemCount,
-                        key = { index ->
-                            val article = lazyPagingItems.peek(index)
-                            article?.id ?: index
-                        }
-                    ) { index ->
-                        val article = lazyPagingItems[index]
-                        Row(
-                            Modifier.animateItem()
-                        ) {
-                            Text(
-                                article?.title ?: "",
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                        }
-                    }
-                    if (lazyPagingItems.loadState.append is LoadState.Loading) {
-                        item {
-                            Box(Modifier.animateItem()) {
-                                LoadingIndicator()
-                            }
-                        }
-                    }
-                }
+@Composable
+private fun HomeScreenContent(lazyPagingItems: LazyPagingItems<Article>) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        items(
+            count = lazyPagingItems.itemCount,
+            key = { index ->
+                val article = lazyPagingItems.peek(index)
+                article?.id ?: index
+            }
+        ) { index ->
+            val article = lazyPagingItems[index] ?: return@items
+            HomeScreenItem(
+                modifier = Modifier.animateItem(),
+                article = article
+            )
+        }
+
+        if (lazyPagingItems.loadState.append is LoadState.Loading) {
+            item(key = "Loading") {
+                HomeScreenAppendLoading(Modifier.animateItem())
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalAnimationApi::class)
+@Composable
+private fun HomeScreenContainedLoading() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        ContainedLoadingIndicator()
+    }
+}
+
+@Composable
+private fun HomeScreenError(error: String, retry: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = error)
+        Button(
+            onClick = retry,
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text("重试")
+        }
+    }
+}
+
+@Composable
+private fun HomeScreenItem(modifier: Modifier, article: Article) {
+    Row(modifier) {
+        Text(
+            article.title,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalAnimationApi::class)
+@Composable
+private fun HomeScreenAppendLoading(modifier: Modifier) {
+    Box(
+        modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        LoadingIndicator()
     }
 }

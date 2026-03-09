@@ -9,6 +9,7 @@ plugins {
 }
 
 kotlin {
+    // 用于解决web环境中玩Android开放API跨域的问题
     val proxyConfig = mutableListOf(
         Proxy(
             context = mutableListOf("/api"),

@@ -2,7 +2,6 @@ package org.lazy.wanandroid.core.data.paging
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import kotlinx.coroutines.delay
 import org.lazy.wanandroid.core.network.NetworkDataSource
 import org.lazy.wanandroid.core.network.model.Article
 

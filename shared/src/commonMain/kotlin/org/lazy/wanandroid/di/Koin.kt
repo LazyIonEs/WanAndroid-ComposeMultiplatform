@@ -5,9 +5,7 @@ import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.plugins.logging.SIMPLE
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -49,7 +47,7 @@ private fun buildClient(): HttpClient {
         }
         install(Logging) {
             level = LogLevel.ALL
-            logger = Logger.SIMPLE
+            // logger = Logger.SIMPLE
         }
         install(ContentNegotiation) {
             json(Json {

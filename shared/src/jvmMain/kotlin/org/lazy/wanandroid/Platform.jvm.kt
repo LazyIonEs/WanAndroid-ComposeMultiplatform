@@ -1,7 +1,5 @@
 package org.lazy.wanandroid
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontFamily
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.apache5.Apache5
@@ -20,6 +18,3 @@ actual fun httpClient(config: HttpClientConfig<*>.() -> Unit) = HttpClient(Apach
 }
 
 actual fun getPlatformFontResource(): FontResource? = null
-
-@Composable
-actual fun getPlatformSpecificFontFamily(): FontFamily? = null
