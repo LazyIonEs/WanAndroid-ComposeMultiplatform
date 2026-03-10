@@ -19,5 +19,13 @@ object NetworkApi {
      */
     fun articleList(page: Int) = getBaseUrl() + "article/list/${page}/json"
 
-
+    /**
+     * 首页置顶文章
+     * ```
+     * https://www.wanandroid.com/article/top/json
+     *
+     * 方法：GET
+     * ```
+     */
+    fun articleTop() = getBaseUrl() + "article/top/json"
 }

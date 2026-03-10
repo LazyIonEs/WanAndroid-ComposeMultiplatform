@@ -4,6 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import org.lazy.wanandroid.core.data.paging.ArticlePagingSource
 import org.lazy.wanandroid.core.network.NetworkDataSource
 import org.lazy.wanandroid.core.network.model.Article
@@ -18,5 +19,20 @@ class HomeRepository(private val network: NetworkDataSource) {
             ),
             pagingSourceFactory = { ArticlePagingSource(network) }
         ).flow
+    }
+
+    fun getArticleTop(): Flow<List<Article>?> {
+        return flow {
+            runCatching {
+                val result = network.articleTop()
+                if (result.isSuccess()) {
+                    emit(result.data)
+                } else {
+                    emit(null)
+                }
+            }.onFailure {
+                emit(null)
+            }
+        }
     }
 }

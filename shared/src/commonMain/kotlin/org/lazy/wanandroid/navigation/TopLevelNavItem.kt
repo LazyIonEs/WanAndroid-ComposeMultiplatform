@@ -1,64 +1,47 @@
 package org.lazy.wanandroid.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DataUsage
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Navigation
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.ViewAgenda
-import androidx.compose.material.icons.rounded.DataUsage
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Navigation
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.ViewAgenda
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
+import org.jetbrains.compose.resources.DrawableResource
 import org.lazy.wanandroid.feature.home.navigation.HomeNavKey
 import org.lazy.wanandroid.feature.navigation.navigation.NavigationNavKey
 import org.lazy.wanandroid.feature.project.navigation.ProjectNavKey
 import org.lazy.wanandroid.feature.settings.navigation.SettingsNavKey
-import org.lazy.wanandroid.feature.wechat.navigation.WeChatNavKey
+import wanandroid.shared.generated.resources.Res
+import wanandroid.shared.generated.resources.home_24
+import wanandroid.shared.generated.resources.home_24_sel
+import wanandroid.shared.generated.resources.navigation_24
+import wanandroid.shared.generated.resources.navigation_24_sel
+import wanandroid.shared.generated.resources.project_24
+import wanandroid.shared.generated.resources.project_24_sel
 
 data class TopLevelNavItem(
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
-    val iconText: String
+    val selectedIcon: DrawableResource,
+    val unselectedIcon: DrawableResource,
+    val label: String
 )
 
 val HOME = TopLevelNavItem(
-    selectedIcon = Icons.Rounded.Home,
-    unselectedIcon = Icons.Outlined.Home,
-    iconText = "首页",
+    selectedIcon = Res.drawable.home_24_sel,
+    unselectedIcon = Res.drawable.home_24,
+    label = "首页",
 )
 
-val NAVIGATION = TopLevelNavItem(
-    selectedIcon = Icons.Rounded.Navigation,
-    unselectedIcon = Icons.Outlined.Navigation,
-    iconText = "导航",
+val PLAZA = TopLevelNavItem(
+    selectedIcon = Res.drawable.navigation_24_sel,
+    unselectedIcon = Res.drawable.navigation_24,
+    label = "广场",
 )
 
 val PROJECT = TopLevelNavItem(
-    selectedIcon = Icons.Rounded.ViewAgenda,
-    unselectedIcon = Icons.Outlined.ViewAgenda,
-    iconText = "项目",
-)
-
-val WECHAT = TopLevelNavItem(
-    selectedIcon = Icons.Rounded.DataUsage,
-    unselectedIcon = Icons.Outlined.DataUsage,
-    iconText = "公众号",
-)
-
-val SETTINGS = TopLevelNavItem(
-    selectedIcon = Icons.Rounded.Settings,
-    unselectedIcon = Icons.Outlined.Settings,
-    iconText = "设置",
+    selectedIcon = Res.drawable.project_24_sel,
+    unselectedIcon = Res.drawable.project_24,
+    label = "项目",
 )
 
 val TOP_LEVEL_NAV_ITEMS: Map<NavKey, TopLevelNavItem> = mapOf(
     HomeNavKey to HOME,
-    NavigationNavKey to NAVIGATION,
+    NavigationNavKey to PLAZA,
     ProjectNavKey to PROJECT,
-    WeChatNavKey to WECHAT,
-    SettingsNavKey to SETTINGS,
 )
+
+val TOP_LEVEL_NAV_KEYS: Set<NavKey> = TOP_LEVEL_NAV_ITEMS.keys + SettingsNavKey

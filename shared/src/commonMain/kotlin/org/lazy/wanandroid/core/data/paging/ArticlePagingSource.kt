@@ -9,7 +9,7 @@ class ArticlePagingSource(val network: NetworkDataSource) : PagingSource<Int, Ar
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Article> {
         return runCatching {
-            val nextPageNumber = params.key ?: 1
+            val nextPageNumber = params.key ?: 0
             val result = network.articleList(nextPageNumber, params.loadSize)
             if (result.isSuccess()) {
                 val articleList = result.data

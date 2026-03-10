@@ -3,6 +3,8 @@ package org.lazy.wanandroid.feature.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import org.lazy.wanandroid.core.data.repository.HomeRepository
 import org.lazy.wanandroid.core.network.model.ArticleList
 
@@ -12,12 +14,23 @@ sealed interface HomeUiState {
     data class Error(val message: String?) : HomeUiState
 }
 
-class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
+class HomeViewModel(repository: HomeRepository) : ViewModel() {
+
 
     /**
-     * A [Flow] of paging data containing the list of articles,
-     * cached within the [viewModelScope] for lifecycle-aware persistence.
+     * A reactive stream of paginated article data, cached within the [viewModelScope]
+     * to maintain the paging state across configuration changes.
      */
-    val articleListFlow = repository.getArticleListStream().cachedIn(viewModelScope)
+    val articleList = repository.getArticleListStream().cachedIn(viewModelScope)
 
+    /**
+     * A reactive stream providing the list of pinned or "top" articles.
+     */
+    val articleTop = repository
+        .getArticleTop()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
 }
