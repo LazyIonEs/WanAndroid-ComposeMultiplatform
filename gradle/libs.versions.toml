@@ -22,6 +22,7 @@ ktor = "3.4.1"
 koin-bom = "4.2.0-RC1"
 koin-plugin = "0.3.0"
 paging = "3.4.1"
+materialKolor = "4.1.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -75,6 +76,8 @@ koin-compose-viewmodel-navigation3 = { module = "io.insert-koin:koin-compose-nav
 koin-ktor = { module = "io.insert-koin:koin-ktor" }
 koin-test = { module = "io.insert-koin:koin-test" }
 paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
+# https://github.com/jordond/MaterialKolor
+materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

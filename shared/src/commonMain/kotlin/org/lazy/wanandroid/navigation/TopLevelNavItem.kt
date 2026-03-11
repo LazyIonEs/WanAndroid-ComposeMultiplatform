@@ -2,10 +2,9 @@ package org.lazy.wanandroid.navigation
 
 import androidx.navigation3.runtime.NavKey
 import org.jetbrains.compose.resources.DrawableResource
-import org.lazy.wanandroid.feature.home.navigation.HomeNavKey
-import org.lazy.wanandroid.feature.plaza.navigation.PlazaNavKey
-import org.lazy.wanandroid.feature.project.navigation.ProjectNavKey
-import org.lazy.wanandroid.feature.settings.navigation.SettingsNavKey
+import org.lazy.wanandroid.feature.navigation.HomeNavKey
+import org.lazy.wanandroid.feature.navigation.PlazaNavKey
+import org.lazy.wanandroid.feature.navigation.ProjectNavKey
 import wanandroid.shared.generated.resources.Res
 import wanandroid.shared.generated.resources.home_24
 import wanandroid.shared.generated.resources.home_24_sel
@@ -44,6 +43,4 @@ val TOP_LEVEL_NAV_ITEMS: Map<NavKey, TopLevelNavItem> = mapOf(
     ProjectNavKey to PROJECT,
 )
 
-internal val SECOND_LEVEL_PAGE_NAV_KEY = setOf(SettingsNavKey)
-
-val TOP_LEVEL_NAV_KEYS: Set<NavKey> = TOP_LEVEL_NAV_ITEMS.keys + SECOND_LEVEL_PAGE_NAV_KEY
+val TOP_LEVEL_NAV_KEYS: Set<NavKey> = TOP_LEVEL_NAV_ITEMS.keys

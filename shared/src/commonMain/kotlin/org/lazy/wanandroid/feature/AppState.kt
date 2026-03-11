@@ -5,7 +5,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.CoroutineScope
-import org.lazy.wanandroid.feature.home.navigation.HomeNavKey
+import org.lazy.wanandroid.feature.navigation.HomeNavKey
 import org.lazy.wanandroid.navigation.NavigationState
 import org.lazy.wanandroid.navigation.TOP_LEVEL_NAV_KEYS
 import org.lazy.wanandroid.navigation.rememberNavigationState
@@ -14,7 +14,11 @@ import org.lazy.wanandroid.navigation.rememberNavigationState
 fun rememberAppState(
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
 ): AppState {
-    val navigationState = rememberNavigationState(HomeNavKey, TOP_LEVEL_NAV_KEYS)
+    val navigationState =
+        rememberNavigationState(
+            startKey = HomeNavKey,
+            topLevelKeys = TOP_LEVEL_NAV_KEYS
+        )
 
     return remember(
         navigationState,

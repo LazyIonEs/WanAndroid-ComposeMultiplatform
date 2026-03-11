@@ -101,9 +101,9 @@ kotlin {
             // paging
             implementation(libs.paging.compose)
 
-            implementation("be.digitalia.compose.htmlconverter:htmlconverter:1.1.0")
-
             implementation("com.fleeksoft.ksoup:ksoup:0.2.6")
+
+            implementation("com.materialkolor:material-kolor:4.1.1")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

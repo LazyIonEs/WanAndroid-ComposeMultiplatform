@@ -18,6 +18,7 @@ package org.lazy.wanandroid.navigation
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.navigation3.runtime.NavKey
+import org.lazy.wanandroid.feature.navigation.ArticleNavKey
 
 val LocalNavigator = staticCompositionLocalOf<Navigator> {
     error("No Navigator provided")
@@ -37,6 +38,10 @@ class Navigator(val state: NavigationState) {
      */
     fun navigate(key: NavKey) {
         when (key) {
+            is ArticleNavKey -> {
+                clearSubStack()
+                goToKey(key)
+            }
             state.currentTopLevelKey -> clearSubStack()
             in state.topLevelKeys -> goToTopLevel(key)
             else -> goToKey(key)

@@ -8,7 +8,6 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.dsl.viewModel
@@ -19,10 +18,7 @@ import org.koin.plugin.module.dsl.create
 import org.lazy.wanandroid.core.data.repository.HomeRepository
 import org.lazy.wanandroid.core.network.NetworkDataSource
 import org.lazy.wanandroid.feature.home.HomeViewModel
-import org.lazy.wanandroid.feature.home.navigation.homeEntry
-import org.lazy.wanandroid.feature.plaza.navigation.plazaEntry
-import org.lazy.wanandroid.feature.project.navigation.projectEntry
-import org.lazy.wanandroid.feature.settings.navigation.settingsEntry
+import org.lazy.wanandroid.feature.navigation.entryModule
 import org.lazy.wanandroid.httpClient
 
 val viewModelModule = module {
@@ -62,9 +58,8 @@ private fun buildClient(): HttpClient {
     }
 }
 
-@OptIn(KoinExperimentalAPI::class)
 val navigationModule = module {
-    includes(homeEntry, plazaEntry, projectEntry, settingsEntry)
+    includes(entryModule)
 }
 
 val appModule = module {

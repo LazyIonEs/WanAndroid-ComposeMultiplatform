@@ -34,20 +34,22 @@ import androidx.navigation3.runtime.serialization.NavBackStackSerializer
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.PolymorphicSerializer
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.plus
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import org.lazy.wanandroid.feature.home.navigation.homeSerializersModule
-import org.lazy.wanandroid.feature.plaza.navigation.PlazaNavKey
-import org.lazy.wanandroid.feature.project.navigation.ProjectNavKey
-import org.lazy.wanandroid.feature.settings.navigation.SettingsNavKey
+import org.lazy.wanandroid.feature.navigation.ArticleNavKey
+import org.lazy.wanandroid.feature.navigation.HomeNavKey
+import org.lazy.wanandroid.feature.navigation.PlazaNavKey
+import org.lazy.wanandroid.feature.navigation.ProjectNavKey
+import org.lazy.wanandroid.feature.navigation.SettingsNavKey
 
 val config = SavedStateConfiguration {
-    serializersModule = homeSerializersModule + SerializersModule {
+    serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
+            subclass(HomeNavKey::class)
             subclass(PlazaNavKey::class)
             subclass(ProjectNavKey::class)
             subclass(SettingsNavKey::class)
+            subclass(ArticleNavKey::class)
         }
     }
 }

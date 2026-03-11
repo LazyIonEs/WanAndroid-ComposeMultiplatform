@@ -3,6 +3,7 @@ package org.lazy.wanandroid.feature.home
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,15 +13,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
@@ -30,29 +32,37 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.window.core.layout.WindowSizeClass
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
+import com.materialkolor.ktx.harmonize
 import org.koin.compose.viewmodel.koinViewModel
+import org.lazy.wanandroid.LocalAppState
+import org.lazy.wanandroid.LocalWindowAdaptiveInfo
 import org.lazy.wanandroid.common.defaultTransition
 import org.lazy.wanandroid.common.listEnterTransition
 import org.lazy.wanandroid.core.network.model.Article
+import org.lazy.wanandroid.feature.navigation.ArticleNavKey
+import kotlin.random.Random
 
 @Composable
 fun HomeScreen(
-    onTopicClick: () -> Unit, viewModel: HomeViewModel = koinViewModel()
+    onTopicClick: (Article) -> Unit, viewModel: HomeViewModel = koinViewModel()
 ) {
     val lazyPagingItems = viewModel.articleList.collectAsLazyPagingItems()
     val articleTop by viewModel.articleTop.collectAsStateWithLifecycle()
@@ -67,7 +77,7 @@ fun HomeScreen(
 internal fun HomeScreen(
     articleList: LazyPagingItems<Article>,
     articleTop: List<Article>?,
-    onTopicClick: () -> Unit,
+    onTopicClick: (Article) -> Unit,
     retry: () -> Unit
 ) {
     val refreshState = articleList.loadState.refresh
@@ -93,6 +103,7 @@ internal fun HomeScreen(
             else -> HomeScreenContent(
                 articleList = articleList,
                 articleTop = articleTop,
+                onTopicClick = onTopicClick
             )
         }
     }
@@ -103,50 +114,78 @@ internal fun HomeScreen(
 private fun HomeScreenContent(
     articleList: LazyPagingItems<Article>,
     articleTop: List<Article>?,
+    onTopicClick: (Article) -> Unit,
 ) {
     val appendState = articleList.loadState.append
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    LazyVerticalStaggeredGrid(
+        columns = rememberColumns(),
+        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
     ) {
         if (articleTop?.isNotEmpty() == true) {
             items(
-                items = articleTop, key = { article ->
+                items = articleTop,
+                key = { article ->
                     article.id ?: articleTop.indexOf(article)
-                }) { article ->
-                val title = article.title
-                val author = article.author?.ifBlank { article.shareUser } ?: ""
-                val niceDate = article.niceDate?.ifBlank { article.niceShareDate } ?: ""
+                },
+            ) { article ->
                 HomeScreenItem(
-                    title = title,
-                    author = author,
-                    niceDate = niceDate,
+                    article = article,
+                    onTopicClick = onTopicClick,
                     modifier = Modifier.animateItem()
                 )
             }
         }
 
         items(
-            count = articleList.itemCount, key = { index ->
+            count = articleList.itemCount,
+            key = { index ->
                 val article = articleList.peek(index)
                 article?.id ?: index
-            }) { index ->
+            }
+        ) { index ->
             val article = articleList[index] ?: return@items
-            val title = article.title
-            val author = article.author?.ifBlank { article.shareUser } ?: ""
-            val niceDate = article.niceDate?.ifBlank { article.niceShareDate } ?: ""
             HomeScreenItem(
-                title = title,
-                author = author,
-                niceDate = niceDate,
+                article = article,
+                onTopicClick = onTopicClick,
                 modifier = Modifier.animateItem()
             )
         }
 
         if (appendState == LoadState.Loading) {
-            item(key = "Loading") {
+            item(key = "Loading", span = StaggeredGridItemSpan.FullLine) {
                 HomeScreenAppendLoading(Modifier.animateItem())
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@Composable
+private fun rememberColumns(): StaggeredGridCells {
+    val windowAdaptiveInfo = LocalWindowAdaptiveInfo.current
+    val currentKey = LocalAppState.current.navigationState.currentKey
+    return remember(windowAdaptiveInfo, currentKey) {
+        val scaffoldDirective = calculatePaneScaffoldDirective(windowAdaptiveInfo)
+
+        val isMultiPane = scaffoldDirective.maxHorizontalPartitions > 1
+
+        val enterSecondaryPage = currentKey is ArticleNavKey
+
+        val isCurrentlyMultiPane = isMultiPane && enterSecondaryPage
+
+        val windowSizeClass = windowAdaptiveInfo.windowSizeClass
+
+        when {
+            isCurrentlyMultiPane -> StaggeredGridCells.Fixed(1)
+            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND) ->
+                StaggeredGridCells.Fixed(5)
+            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_LARGE_LOWER_BOUND) ->
+                StaggeredGridCells.Fixed(4)
+            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) ->
+                StaggeredGridCells.Fixed(3)
+            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) ->
+                StaggeredGridCells.Fixed(2)
+            else -> StaggeredGridCells.Fixed(1)
         }
     }
 }
@@ -179,24 +218,29 @@ private fun HomeScreenError(error: String, retry: () -> Unit) {
 
 @Composable
 private fun HomeScreenItem(
-    title: String,
-    author: String,
-    niceDate: String,
+    article: Article,
+    onTopicClick: (Article) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val title = article.title
+    val author = article.author?.ifBlank { article.shareUser } ?: ""
+    val niceDate = article.niceDate?.ifBlank { article.niceShareDate } ?: ""
     Card(
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        ),
+        modifier = modifier.padding(8.dp).clickable {
+            onTopicClick.invoke(article)
+        }
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
+            val randomColor =
+                Color.hsv(hue = Random.nextFloat() * 360f, saturation = 0.2f, value = 0.9f)
+            val newColor =
+                MaterialTheme.colorScheme.surfaceContainerHighest
+                    .harmonize(randomColor, matchSaturation = true)
             Box(
-                modifier = Modifier.fillMaxWidth().height(128.dp).background(
-                    color = Color(0XFFDCE8B3)
-                )
+                modifier = Modifier.fillMaxWidth().height(128.dp)
+                    .background(color = newColor)
             ) {
 
             }
@@ -263,27 +307,5 @@ private fun HomeScreenAppendLoading(modifier: Modifier) {
         contentAlignment = Alignment.Center
     ) {
         LoadingIndicator()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HomeScreenItemPreview() {
-    Column {
-        HomeScreenItem(
-            title = "<em class='highlight'>Compose</em> <em class='highlight'>Multiplatform</em> 1.10 Interop views 新特性：Overlay 和 Autosizing",
-            author = "abc",
-            niceDate = "11小时前"
-        )
-        HomeScreenItem(
-            title = "测试标题，我很长我很长我很长我很长",
-            author = "作者",
-            niceDate = "11小时前"
-        )
-        HomeScreenItem(
-            title = "测试标题，我很长我很长我很长我很长我很长",
-            author = "作者",
-            niceDate = "11小时前"
-        )
     }
 }
