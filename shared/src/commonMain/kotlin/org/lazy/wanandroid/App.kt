@@ -2,7 +2,6 @@ package org.lazy.wanandroid
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -94,20 +93,24 @@ fun App(
                 }, actions = {
                     AppBarRow {
                         clickableItem(
-                            onClick = { }, icon = {
+                            onClick = { },
+                            icon = {
                                 Icon(
                                     painter = painterResource(Res.drawable.search_24),
                                     contentDescription = "搜索"
                                 )
-                            }, label = "搜索"
+                            },
+                            label = "搜索",
                         )
                         clickableItem(
-                            onClick = { navigator.navigate(SettingsNavKey) }, icon = {
+                            onClick = { navigator.navigate(SettingsNavKey) },
+                            icon = {
                                 Icon(
                                     painter = painterResource(Res.drawable.settings_24),
                                     contentDescription = "设置"
                                 )
-                            }, label = "搜索"
+                            },
+                            label = "搜索"
                         )
                     }
                 }, navigationIcon = {

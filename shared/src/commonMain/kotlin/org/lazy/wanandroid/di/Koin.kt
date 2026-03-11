@@ -20,10 +20,9 @@ import org.lazy.wanandroid.core.data.repository.HomeRepository
 import org.lazy.wanandroid.core.network.NetworkDataSource
 import org.lazy.wanandroid.feature.home.HomeViewModel
 import org.lazy.wanandroid.feature.home.navigation.homeEntry
-import org.lazy.wanandroid.feature.navigation.navigation.navigationEntry
+import org.lazy.wanandroid.feature.plaza.navigation.plazaEntry
 import org.lazy.wanandroid.feature.project.navigation.projectEntry
 import org.lazy.wanandroid.feature.settings.navigation.settingsEntry
-import org.lazy.wanandroid.feature.wechat.navigation.weChatEntry
 import org.lazy.wanandroid.httpClient
 
 val viewModelModule = module {
@@ -65,7 +64,7 @@ private fun buildClient(): HttpClient {
 
 @OptIn(KoinExperimentalAPI::class)
 val navigationModule = module {
-    includes(homeEntry, navigationEntry, projectEntry, settingsEntry, weChatEntry)
+    includes(homeEntry, plazaEntry, projectEntry, settingsEntry)
 }
 
 val appModule = module {

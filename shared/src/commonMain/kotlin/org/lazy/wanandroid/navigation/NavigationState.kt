@@ -37,19 +37,16 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.plus
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import org.lazy.wanandroid.feature.home.navigation.HomeNavKey
 import org.lazy.wanandroid.feature.home.navigation.homeSerializersModule
-import org.lazy.wanandroid.feature.navigation.navigation.NavigationNavKey
+import org.lazy.wanandroid.feature.plaza.navigation.PlazaNavKey
 import org.lazy.wanandroid.feature.project.navigation.ProjectNavKey
 import org.lazy.wanandroid.feature.settings.navigation.SettingsNavKey
-import org.lazy.wanandroid.feature.wechat.navigation.WeChatNavKey
 
 val config = SavedStateConfiguration {
     serializersModule = homeSerializersModule + SerializersModule {
         polymorphic(NavKey::class) {
-            subclass(NavigationNavKey::class)
+            subclass(PlazaNavKey::class)
             subclass(ProjectNavKey::class)
-            subclass(WeChatNavKey::class)
             subclass(SettingsNavKey::class)
         }
     }

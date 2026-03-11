@@ -1,4 +1,4 @@
-package org.lazy.wanandroid.feature.navigation
+package org.lazy.wanandroid.feature.plaza
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun NavigationScreen() {
+fun PlazaScreen() {
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
         Text("Navigation")
     }
