@@ -22,8 +22,8 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -62,7 +62,8 @@ import kotlin.random.Random
 
 @Composable
 fun HomeScreen(
-    onTopicClick: (Article) -> Unit, viewModel: HomeViewModel = koinViewModel()
+    onTopicClick: (Article) -> Unit,
+    viewModel: HomeViewModel = koinViewModel()
 ) {
     val lazyPagingItems = viewModel.articleList.collectAsLazyPagingItems()
     val articleTop by viewModel.articleTop.collectAsStateWithLifecycle()
@@ -225,7 +226,7 @@ private fun HomeScreenItem(
     val title = article.title
     val author = article.author?.ifBlank { article.shareUser } ?: ""
     val niceDate = article.niceDate?.ifBlank { article.niceShareDate } ?: ""
-    Card(
+    ElevatedCard(
         modifier = modifier.padding(8.dp).clickable {
             onTopicClick.invoke(article)
         }
@@ -233,13 +234,12 @@ private fun HomeScreenItem(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            val randomColor =
-                Color.hsv(hue = Random.nextFloat() * 360f, saturation = 0.2f, value = 0.9f)
-            val newColor =
-                MaterialTheme.colorScheme.surfaceContainerHighest
-                    .harmonize(randomColor, matchSaturation = true)
+            val randomColor = Color.hsv(hue = Random.nextFloat() * 360f, saturation = 1f, value = 1f)
+            val newColor = MaterialTheme.colorScheme.primaryContainer
+                .harmonize(randomColor)
             Box(
-                modifier = Modifier.fillMaxWidth().height(128.dp)
+                modifier = Modifier.fillMaxWidth()
+                    .height(128.dp)
                     .background(color = newColor)
             ) {
 
@@ -284,7 +284,6 @@ private fun HomeScreenItem(
                             .padding(horizontal = 8.dp),
                         text = "$author · $niceDate",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     IconButton(onClick = { }, modifier = Modifier.size(32.dp)) {
                         Icon(

@@ -1,4 +1,4 @@
-package org.lazy.wanandroid.core.network
+package org.lazy.wanandroid.core.data.source
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -22,7 +22,7 @@ class NetworkDataSource(private val client: HttpClient) {
      *
      * @param page 页码，从0开始
      * @param pageSize 分页数量，取值范围为 [1, 40]
-     * @return 包含文章列表数据的 [Result] 对象
+     * @return 包含文章列表数据的 [org.lazy.wanandroid.core.network.model.Result] 对象
      */
     suspend fun articleList(page: Int, pageSize: Int): Result<ArticleList> {
         val response = client.get(NetworkApi.articleList(page)) {

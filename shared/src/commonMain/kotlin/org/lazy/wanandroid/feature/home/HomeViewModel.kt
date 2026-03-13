@@ -6,13 +6,6 @@ import androidx.paging.cachedIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import org.lazy.wanandroid.core.data.repository.HomeRepository
-import org.lazy.wanandroid.core.network.model.ArticleList
-
-sealed interface HomeUiState {
-    data object Loading : HomeUiState
-    data class Success(val data: ArticleList) : HomeUiState
-    data class Error(val message: String?) : HomeUiState
-}
 
 class HomeViewModel(repository: HomeRepository) : ViewModel() {
 

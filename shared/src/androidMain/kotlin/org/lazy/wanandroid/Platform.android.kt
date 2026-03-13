@@ -1,10 +1,13 @@
 package org.lazy.wanandroid
 
 import android.os.Build
+import com.russhwolf.settings.ObservableSettings
+import com.russhwolf.settings.SharedPreferencesSettings
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.okhttp.OkHttp
 import org.jetbrains.compose.resources.FontResource
+import org.koin.dsl.module
 import java.util.concurrent.TimeUnit
 
 class AndroidPlatform : Platform {
@@ -13,7 +16,7 @@ class AndroidPlatform : Platform {
 
 actual fun getPlatform(): Platform = AndroidPlatform()
 
-actual fun getBaseUrl(): String = "https://www.wanandroid.com/"
+actual fun getBaseUrl(): String = BASE_URL
 
 actual fun httpClient(config: HttpClientConfig<*>.() -> Unit) = HttpClient(OkHttp) {
     config(this)
@@ -29,3 +32,7 @@ actual fun httpClient(config: HttpClientConfig<*>.() -> Unit) = HttpClient(OkHtt
 }
 
 actual fun getPlatformFontResource(): FontResource? = null
+
+actual val platformModule = module {
+    single<ObservableSettings> { SharedPreferencesSettings.Factory(get()).create(SETTINGS_NAME) }
+}

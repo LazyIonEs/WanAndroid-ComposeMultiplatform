@@ -5,8 +5,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import org.lazy.wanandroid.core.data.paging.ArticlePagingSource
-import org.lazy.wanandroid.core.network.NetworkDataSource
+import org.lazy.wanandroid.core.data.source.ArticlePagingSource
+import org.lazy.wanandroid.core.data.source.NetworkDataSource
 import org.lazy.wanandroid.core.network.model.Article
 
 class HomeRepository(private val network: NetworkDataSource) {

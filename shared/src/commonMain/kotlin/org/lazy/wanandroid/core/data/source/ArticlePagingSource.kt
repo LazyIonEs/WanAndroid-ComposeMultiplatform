@@ -1,8 +1,8 @@
-package org.lazy.wanandroid.core.data.paging
+package org.lazy.wanandroid.core.data.source
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import org.lazy.wanandroid.core.network.NetworkDataSource
+import org.lazy.wanandroid.core.data.source.NetworkDataSource
 import org.lazy.wanandroid.core.network.model.Article
 
 class ArticlePagingSource(val network: NetworkDataSource) : PagingSource<Int, Article>() {

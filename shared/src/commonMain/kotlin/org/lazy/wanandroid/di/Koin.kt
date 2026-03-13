@@ -1,5 +1,6 @@
 package org.lazy.wanandroid.di
 
+import com.russhwolf.settings.ExperimentalSettingsApi
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
@@ -15,20 +16,32 @@ import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.includes
 import org.koin.dsl.module
 import org.koin.plugin.module.dsl.create
+import org.lazy.wanandroid.AppViewModel
 import org.lazy.wanandroid.core.data.repository.HomeRepository
-import org.lazy.wanandroid.core.network.NetworkDataSource
+import org.lazy.wanandroid.core.data.repository.PreferencesRepository
+import org.lazy.wanandroid.core.data.source.NetworkDataSource
+import org.lazy.wanandroid.core.data.source.PreferencesDataSource
 import org.lazy.wanandroid.feature.home.HomeViewModel
 import org.lazy.wanandroid.feature.navigation.entryModule
+import org.lazy.wanandroid.feature.settings.SettingsViewModel
 import org.lazy.wanandroid.httpClient
+import org.lazy.wanandroid.platformModule
 
 val viewModelModule = module {
+    viewModel { AppViewModel(get()) }
     viewModel { HomeViewModel(get()) }
+    viewModel { SettingsViewModel(get()) }
 }
 
+@OptIn(ExperimentalSettingsApi::class)
 val dataModule = module {
     single { create(::buildClient) }
     single { NetworkDataSource(get()) }
+
+    single { PreferencesDataSource(get()) }
+
     single { HomeRepository(get()) }
+    single { PreferencesRepository(get()) }
 }
 
 private fun buildClient(): HttpClient {
@@ -63,7 +76,7 @@ val navigationModule = module {
 }
 
 val appModule = module {
-    includes(dataModule, viewModelModule, navigationModule)
+    includes(platformModule, dataModule, viewModelModule, navigationModule)
 }
 
 fun initKoin(configuration: KoinAppDeclaration? = null) {

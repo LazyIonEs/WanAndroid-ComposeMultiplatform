@@ -80,6 +80,9 @@ kotlin {
             implementation(libs.compose.material.icons.extended)
             implementation(libs.kotlinx.serialization.json)
 
+            // paging
+            implementation(libs.androidx.paging.compose)
+
             // Network
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.logging)
@@ -98,12 +101,13 @@ kotlin {
             implementation(libs.koin.compose.viewmodel.navigation3)
             implementation(libs.koin.ktor)
 
-            // paging
-            implementation(libs.paging.compose)
+            implementation(libs.ksoup)
 
-            implementation("com.fleeksoft.ksoup:ksoup:0.2.6")
+            implementation(libs.material.kolor)
 
-            implementation("com.materialkolor:material-kolor:4.1.1")
+            implementation(libs.multiplatform.settings)
+            implementation(libs.multiplatform.settings.coroutines)
+            implementation(libs.multiplatform.settings.make.observable)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
