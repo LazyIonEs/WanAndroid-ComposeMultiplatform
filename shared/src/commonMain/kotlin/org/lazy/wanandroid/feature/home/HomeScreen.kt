@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,17 +19,12 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,7 +38,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
@@ -54,6 +54,7 @@ import com.materialkolor.ktx.harmonize
 import org.koin.compose.viewmodel.koinViewModel
 import org.lazy.wanandroid.LocalAppState
 import org.lazy.wanandroid.LocalWindowAdaptiveInfo
+import org.lazy.wanandroid.common.AmbientRow
 import org.lazy.wanandroid.common.defaultTransition
 import org.lazy.wanandroid.common.listEnterTransition
 import org.lazy.wanandroid.core.network.model.Article
@@ -179,14 +180,18 @@ private fun rememberColumns(): StaggeredGridCells {
         when {
             isCurrentlyMultiPane -> StaggeredGridCells.Fixed(1)
             windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND) ->
-                StaggeredGridCells.Fixed(5)
+                StaggeredGridCells.Fixed(6)
+
             windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_LARGE_LOWER_BOUND) ->
-                StaggeredGridCells.Fixed(4)
+                StaggeredGridCells.Fixed(5)
+
             windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) ->
-                StaggeredGridCells.Fixed(3)
+                StaggeredGridCells.Fixed(4)
+
             windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) ->
-                StaggeredGridCells.Fixed(2)
-            else -> StaggeredGridCells.Fixed(1)
+                StaggeredGridCells.Fixed(3)
+
+            else -> StaggeredGridCells.Fixed(2)
         }
     }
 }
@@ -234,46 +239,110 @@ private fun HomeScreenItem(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            val randomColor = Color.hsv(hue = Random.nextFloat() * 360f, saturation = 1f, value = 1f)
-            val newColor = MaterialTheme.colorScheme.primaryContainer
-                .harmonize(randomColor)
-            Box(
-                modifier = Modifier.fillMaxWidth()
-                    .height(128.dp)
-                    .background(color = newColor)
+            AmbientRow(
+                modifier = Modifier.fillMaxWidth().height(64.dp)
             ) {
-
+                Spacer(Modifier.size(4.dp))
+                if (article.type == 1) {
+                    Box(
+                        modifier = Modifier.padding(start = 4.dp, top = 8.dp)
+                            .height(18.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.onPrimary),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 6.dp),
+                            text = "置顶",
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 9.sp,
+                            lineHeight = 9.sp,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+                if (article.fresh == true) {
+                    Box(
+                        modifier = Modifier.padding(start = 4.dp, top = 8.dp)
+                            .height(18.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.onPrimary),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 6.dp),
+                            text = "NEW",
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 9.sp,
+                            lineHeight = 9.sp,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+                if (article.chapterName?.isNotBlank() == true) {
+                    Box(
+                        modifier = Modifier.padding(start = 4.dp, top = 8.dp)
+                            .height(18.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.onSecondary),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 6.dp),
+                            text = article.chapterName,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontSize = 9.sp,
+                            lineHeight = 9.sp,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
             }
 
             Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp)
+                modifier = Modifier.fillMaxWidth().padding(10.dp)
             ) {
 
                 val doc: Document = Ksoup.parse(html = title)
 
                 Text(
                     text = doc.text(),
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.labelLarge
                 )
 
-                HorizontalDivider(modifier = Modifier.padding(top = 12.dp))
-
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val color = MaterialTheme.colorScheme.secondaryContainer
+                    val randomColor = remember {
+                        color.harmonize(
+                            Color.hsv(
+                                hue = Random.nextFloat() * 360f,
+                                saturation = 1f,
+                                value = 1f
+                            )
+                        )
+                    }
                     Box(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(16.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.outlineVariant)
-                            .padding(4.dp),
+                            .background(randomColor)
+                            .padding(2.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = author.getOrElse(0) { '文' }.uppercase(),
-                            autoSize = TextAutoSize.StepBased(),
                             fontWeight = FontWeight.Black,
+                            fontSize = 8.sp,
+                            lineHeight = 8.sp,
                             style = MaterialTheme.typography.labelSmall,
                         )
                     }
@@ -281,17 +350,21 @@ private fun HomeScreenItem(
                     Text(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(horizontal = 8.dp),
-                        text = "$author · $niceDate",
-                        style = MaterialTheme.typography.bodyMedium,
+                            .padding(horizontal = 6.dp),
+                        text = author,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.labelSmall,
                     )
-                    IconButton(onClick = { }, modifier = Modifier.size(32.dp)) {
-                        Icon(
-                            imageVector = Icons.Rounded.FavoriteBorder,
-                            contentDescription = "Favorite",
-                        )
-                    }
                 }
+
+                Text(
+                    text = niceDate,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.outline,
+                    style = MaterialTheme.typography.labelSmall,
+                )
             }
         }
     }

@@ -9,12 +9,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.ExperimentalSerializationApi
 import org.lazy.wanandroid.core.data.model.DarkThemeConfig
 
-/**
- * @Author      : LazyIonEs
- * @CreateDate  : 2024/2/20 19:36
- * @Description : 用户偏好设置
- * @Version     : 1.0
- */
 @OptIn(ExperimentalSerializationApi::class, ExperimentalSettingsApi::class)
 class PreferencesDataSource(settings: ObservableSettings) {
 

@@ -59,9 +59,9 @@ import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.navigation3.koinEntryProvider
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
-import org.lazy.wanandroid.core.data.model.DarkThemeConfig
 import org.lazy.wanandroid.di.initKoin
 import org.lazy.wanandroid.feature.AppState
+import org.lazy.wanandroid.feature.navigation.SettingsNavKey
 import org.lazy.wanandroid.feature.rememberAppState
 import org.lazy.wanandroid.navigation.LocalNavigator
 import org.lazy.wanandroid.navigation.Navigator
@@ -114,18 +114,13 @@ fun App(
                     actions = {
                         AnimatedVisibility(!enterSecondaryPage) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(onClick = {
-                                    viewModel.saveAppThemeConfig(DarkThemeConfig.DARK)
-                                }) {
+                                IconButton(onClick = { }) {
                                     Icon(
                                         imageVector = Icons.Rounded.Search,
                                         contentDescription = "搜索"
                                     )
                                 }
-                                IconButton(onClick = {
-                                    viewModel.saveAppThemeConfig(DarkThemeConfig.LIGHT)
-                                    // navigator.navigate(SettingsNavKey)
-                                }) {
+                                IconButton(onClick = { navigator.navigate(SettingsNavKey) }) {
                                     Icon(
                                         imageVector = Icons.Rounded.Settings,
                                         contentDescription = "设置"
