@@ -216,7 +216,7 @@ fun App(
                 NavDisplay(
                     entries = appState.navigationState.toEntries(koinEntryProvider()),
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    sceneStrategy = listDetailStrategy,
+                    sceneStrategies = listOf(listDetailStrategy),
                     onBack = { navigator.goBack() })
             }
         }

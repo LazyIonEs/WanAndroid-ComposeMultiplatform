@@ -41,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
@@ -132,6 +131,7 @@ private fun HomeScreenContent(
             ) { article ->
                 HomeScreenItem(
                     article = article,
+                    pinToTop = true,
                     onTopicClick = onTopicClick,
                     modifier = Modifier.animateItem()
                 )
@@ -148,6 +148,7 @@ private fun HomeScreenContent(
             val article = articleList[index] ?: return@items
             HomeScreenItem(
                 article = article,
+                pinToTop = false,
                 onTopicClick = onTopicClick,
                 modifier = Modifier.animateItem()
             )
@@ -225,6 +226,7 @@ private fun HomeScreenError(error: String, retry: () -> Unit) {
 @Composable
 private fun HomeScreenItem(
     article: Article,
+    pinToTop: Boolean,
     onTopicClick: (Article) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -243,65 +245,26 @@ private fun HomeScreenItem(
                 modifier = Modifier.fillMaxWidth().height(64.dp)
             ) {
                 Spacer(Modifier.size(4.dp))
-                if (article.type == 1) {
-                    Box(
-                        modifier = Modifier.padding(start = 4.dp, top = 8.dp)
-                            .height(18.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.onPrimary),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            modifier = Modifier.padding(horizontal = 6.dp),
-                            text = "置顶",
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 9.sp,
-                            lineHeight = 9.sp,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
+                if (pinToTop) {
+                    LabelText(
+                        label = "置顶",
+                        background = MaterialTheme.colorScheme.onPrimary,
+                        textColor = MaterialTheme.colorScheme.primary
+                    )
                 }
                 if (article.fresh == true) {
-                    Box(
-                        modifier = Modifier.padding(start = 4.dp, top = 8.dp)
-                            .height(18.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.onPrimary),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            modifier = Modifier.padding(horizontal = 6.dp),
-                            text = "NEW",
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 9.sp,
-                            lineHeight = 9.sp,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
+                    LabelText(
+                        label = "NEW",
+                        background = MaterialTheme.colorScheme.onPrimary,
+                        textColor = MaterialTheme.colorScheme.primary
+                    )
                 }
                 if (article.chapterName?.isNotBlank() == true) {
-                    Box(
-                        modifier = Modifier.padding(start = 4.dp, top = 8.dp)
-                            .height(18.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.onSecondary),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            modifier = Modifier.padding(horizontal = 6.dp),
-                            text = article.chapterName,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.secondary,
-                            fontSize = 9.sp,
-                            lineHeight = 9.sp,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
+                    LabelText(
+                        label = article.chapterName,
+                        background = MaterialTheme.colorScheme.onSecondary,
+                        textColor = MaterialTheme.colorScheme.secondary
+                    )
                 }
             }
 
@@ -317,7 +280,7 @@ private fun HomeScreenItem(
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 2.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val color = MaterialTheme.colorScheme.secondaryContainer
@@ -353,6 +316,8 @@ private fun HomeScreenItem(
                             .padding(horizontal = 6.dp),
                         text = author,
                         maxLines = 1,
+                        fontSize = 11.sp,
+                        lineHeight = 11.sp,
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.labelSmall,
                     )
@@ -362,11 +327,35 @@ private fun HomeScreenItem(
                     text = niceDate,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    fontSize = 10.sp,
+                    lineHeight = 10.sp,
                     color = MaterialTheme.colorScheme.outline,
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun LabelText(label: String, background: Color, textColor: Color) {
+    Box(
+        modifier = Modifier.padding(start = 4.dp, top = 8.dp)
+            .height(18.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(background),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            modifier = Modifier.padding(horizontal = 6.dp),
+            text = label,
+            textAlign = TextAlign.Center,
+            color = textColor,
+            fontSize = 9.sp,
+            lineHeight = 9.sp,
+            maxLines = 1,
+            style = MaterialTheme.typography.labelSmall
+        )
     }
 }
 
