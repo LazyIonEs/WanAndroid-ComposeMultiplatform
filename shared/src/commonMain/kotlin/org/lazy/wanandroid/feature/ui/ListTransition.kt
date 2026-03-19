@@ -1,4 +1,4 @@
-package org.lazy.wanandroid.common
+package org.lazy.wanandroid.feature.ui
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring

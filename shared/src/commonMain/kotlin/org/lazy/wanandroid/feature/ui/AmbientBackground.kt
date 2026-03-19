@@ -1,4 +1,4 @@
-package org.lazy.wanandroid.common
+package org.lazy.wanandroid.feature.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row

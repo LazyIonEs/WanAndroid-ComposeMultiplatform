@@ -39,7 +39,7 @@ class Navigator(val state: NavigationState) {
     fun navigate(key: NavKey) {
         when (key) {
             is ArticleNavKey -> {
-                clearSubStack()
+                clearArticleSubStack()
                 goToKey(key)
             }
             state.currentTopLevelKey -> clearSubStack()
@@ -96,6 +96,12 @@ class Navigator(val state: NavigationState) {
     private fun clearSubStack() {
         state.currentSubStack.run {
             if (size > 1) subList(1, size).clear()
+        }
+    }
+
+    private fun clearArticleSubStack() {
+        state.currentSubStack.run {
+            filterIsInstance<ArticleNavKey>().forEach { remove(it) }
         }
     }
 }

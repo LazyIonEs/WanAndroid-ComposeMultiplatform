@@ -29,7 +29,6 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -40,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,13 +51,11 @@ import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
 import com.materialkolor.ktx.harmonize
 import org.koin.compose.viewmodel.koinViewModel
-import org.lazy.wanandroid.LocalAppState
 import org.lazy.wanandroid.LocalWindowAdaptiveInfo
-import org.lazy.wanandroid.common.AmbientRow
-import org.lazy.wanandroid.common.defaultTransition
-import org.lazy.wanandroid.common.listEnterTransition
+import org.lazy.wanandroid.feature.ui.AmbientRow
+import org.lazy.wanandroid.feature.ui.defaultTransition
+import org.lazy.wanandroid.feature.ui.listEnterTransition
 import org.lazy.wanandroid.core.network.model.Article
-import org.lazy.wanandroid.feature.navigation.ArticleNavKey
 import kotlin.random.Random
 
 @Composable
@@ -166,28 +164,14 @@ private fun HomeScreenContent(
 @Composable
 private fun rememberColumns(): StaggeredGridCells {
     val windowAdaptiveInfo = LocalWindowAdaptiveInfo.current
-    val currentKey = LocalAppState.current.navigationState.currentKey
-    return remember(windowAdaptiveInfo, currentKey) {
-        val scaffoldDirective = calculatePaneScaffoldDirective(windowAdaptiveInfo)
-
-        val isMultiPane = scaffoldDirective.maxHorizontalPartitions > 1
-
-        val enterSecondaryPage = currentKey is ArticleNavKey
-
-        val isCurrentlyMultiPane = isMultiPane && enterSecondaryPage
-
+    return remember(windowAdaptiveInfo) {
         val windowSizeClass = windowAdaptiveInfo.windowSizeClass
 
         when {
-            isCurrentlyMultiPane -> StaggeredGridCells.Fixed(1)
-            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND) ->
-                StaggeredGridCells.Fixed(6)
-
-            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_LARGE_LOWER_BOUND) ->
-                StaggeredGridCells.Fixed(5)
-
-            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) ->
-                StaggeredGridCells.Fixed(4)
+            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND)
+                    || windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_LARGE_LOWER_BOUND)
+                    || windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) ->
+                StaggeredGridCells.Fixed(1)
 
             windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) ->
                 StaggeredGridCells.Fixed(3)
@@ -368,5 +352,58 @@ private fun HomeScreenAppendLoading(modifier: Modifier) {
         contentAlignment = Alignment.Center
     ) {
         LoadingIndicator()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenItemPreview() {
+    val testArticle = Article(
+        adminAdd = false,
+        apkLink = "",
+        audit = 1,
+        author = "",
+        canEdit = false,
+        chapterId = 502,
+        chapterName = "自助",
+        collect = false,
+        courseId = 13,
+        desc = "",
+        descMd = "",
+        envelopePic = "",
+        fresh = true,
+        host = "",
+        id = 31227,
+        isAdminAdd = false,
+        link = "https://juejin.cn/post/7612525280755056674",
+        niceDate = "11小时前",
+        niceShareDate = "11小时前",
+        origin = "",
+        prefix = "",
+        projectLink = "",
+        publishTime = 1772498716000L,
+        realSuperChapterId = 493,
+        selfVisible = 0,
+        shareDate = 1772498716000L,
+        shareUser = "panoogunker@gmail.com",
+        superChapterId = 494,
+        superChapterName = "广场Tab",
+        tags = emptyList(),
+        title = "Compose 进阶&mdash;巧用 GraphicsLayer",
+        type = 0,
+        userId = 164286,
+        visible = 1,
+        zan = 0
+    )
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Fixed(2),
+        modifier = Modifier.padding(horizontal = 8.dp)
+    ) {
+        item {
+            HomeScreenItem(testArticle, true, onTopicClick = {})
+        }
+        items(7) {
+            HomeScreenItem(testArticle, false, onTopicClick = {})
+        }
     }
 }

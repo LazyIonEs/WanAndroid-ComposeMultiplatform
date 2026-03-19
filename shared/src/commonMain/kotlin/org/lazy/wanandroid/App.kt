@@ -54,10 +54,12 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
 import androidx.window.core.layout.WindowSizeClass
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.KoinApplication
 import org.koin.compose.navigation3.koinEntryProvider
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
-import org.lazy.wanandroid.di.initKoin
+import org.koin.dsl.koinConfiguration
+import org.lazy.wanandroid.di.appModule
 import org.lazy.wanandroid.feature.AppState
 import org.lazy.wanandroid.feature.navigation.SettingsNavKey
 import org.lazy.wanandroid.feature.rememberAppState
@@ -142,20 +144,21 @@ private fun AppTopBar(
         title = { Text(text = "WanAndroid") },
         scrollBehavior = scrollBehavior,
         actions = {
-            AnimatedVisibility(!enterSecondaryPage) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AnimatedVisibility(!enterSecondaryPage) {
                     IconButton(onClick = { }) {
                         Icon(
                             imageVector = Icons.Rounded.Search,
                             contentDescription = "搜索"
                         )
                     }
-                    IconButton(onClick = { navigator.navigate(SettingsNavKey) }) {
-                        Icon(
-                            imageVector = Icons.Rounded.Settings,
-                            contentDescription = "设置"
-                        )
-                    }
+                }
+
+                IconButton(onClick = { navigator.navigate(SettingsNavKey) }) {
+                    Icon(
+                        imageVector = Icons.Rounded.Settings,
+                        contentDescription = "设置"
+                    )
                 }
             }
         },
@@ -250,9 +253,14 @@ val LocalAppState = staticCompositionLocalOf<AppState> {
     error("No AppState provided")
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun AppPreview() {
-    initKoin()
-    App()
+    KoinApplication(configuration = koinConfiguration {
+        modules(appModule)
+    }) {
+        MaterialTheme {
+            App()
+        }
+    }
 }

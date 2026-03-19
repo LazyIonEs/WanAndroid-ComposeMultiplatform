@@ -131,13 +131,13 @@ compose.resources {
     customDirectory(
         sourceSetName = "wasmJsMain",
         directoryProvider = provider {
-            layout.projectDirectory.dir("webResources")
+            layout.projectDirectory.dir("src/commonMain/webResources")
         }
     )
     customDirectory(
         sourceSetName = "jsMain",
         directoryProvider = provider {
-            layout.projectDirectory.dir("webResources")
+            layout.projectDirectory.dir("src/commonMain/webResources")
         }
     )
 }

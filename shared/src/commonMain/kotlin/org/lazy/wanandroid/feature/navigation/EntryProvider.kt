@@ -10,12 +10,13 @@ import org.lazy.wanandroid.feature.home.HomeScreen
 import org.lazy.wanandroid.feature.plaza.PlazaScreen
 import org.lazy.wanandroid.feature.project.ProjectScreen
 import org.lazy.wanandroid.feature.settings.SettingsScreen
+import org.lazy.wanandroid.feature.ui.ArticleDetailPlaceholder
 import org.lazy.wanandroid.navigation.LocalNavigator
 
 @OptIn(KoinExperimentalAPI::class, ExperimentalMaterial3AdaptiveApi::class)
 val entryModule = module {
     navigation<HomeNavKey>(
-        metadata = ListDetailSceneStrategy.listPane()
+        metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { ArticleDetailPlaceholder() })
     ) {
         val navigator = LocalNavigator.current
         HomeScreen(onTopicClick = { article ->
@@ -23,15 +24,21 @@ val entryModule = module {
         })
     }
 
-    navigation<PlazaNavKey> {
+    navigation<PlazaNavKey>(
+        metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { ArticleDetailPlaceholder() })
+    ) {
         PlazaScreen()
     }
 
-    navigation<ProjectNavKey> {
+    navigation<ProjectNavKey>(
+        metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { ArticleDetailPlaceholder() })
+    ) {
         ProjectScreen()
     }
 
-    navigation<SettingsNavKey> {
+    navigation<SettingsNavKey>(
+        metadata = ListDetailSceneStrategy.extraPane()
+    ) {
         SettingsScreen()
     }
 
