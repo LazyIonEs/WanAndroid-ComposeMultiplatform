@@ -12,15 +12,17 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
+}
 
-    dependencies {
-        implementation(projects.shared)
-        implementation(libs.androidx.activity.compose)
-        implementation(libs.compose.uiToolingPreview)
+dependencies {
+    implementation(projects.shared)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.compose.uiToolingPreview)
 
-        implementation(project.dependencies.platform(libs.koin.bom))
-        implementation(libs.koin.android)
-    }
+    implementation(project.dependencies.platform(libs.koin.bom))
+    implementation(libs.koin.android)
+
+    debugImplementation(libs.compose.uiTooling)
 }
 
 android {
@@ -48,8 +50,4 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-}
-
-dependencies {
-    debugImplementation(libs.compose.uiTooling)
 }

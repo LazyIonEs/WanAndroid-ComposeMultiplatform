@@ -11,23 +11,6 @@ plugins {
 }
 
 kotlin {
-    android {
-        namespace = "org.lazy.wanandroid.library"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        androidResources.enable = true
-
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
-        }
-        androidResources {
-            enable = true
-        }
-        withHostTest {
-            isIncludeAndroidResources = true
-        }
-    }
-
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -47,6 +30,22 @@ kotlin {
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
+    }
+
+    android {
+        namespace = "org.lazy.wanandroid.library"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
+        androidResources {
+            enable = true
+        }
+        withHostTest {
+            isIncludeAndroidResources = true
+        }
     }
 
     sourceSets {

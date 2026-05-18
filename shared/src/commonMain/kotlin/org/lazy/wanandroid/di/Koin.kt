@@ -11,11 +11,12 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
-import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.includes
 import org.koin.dsl.module
 import org.koin.plugin.module.dsl.create
+import org.koin.plugin.module.dsl.single
+import org.koin.plugin.module.dsl.viewModel
 import org.lazy.wanandroid.AppViewModel
 import org.lazy.wanandroid.core.data.repository.HomeRepository
 import org.lazy.wanandroid.core.data.repository.PreferencesRepository
@@ -28,20 +29,20 @@ import org.lazy.wanandroid.httpClient
 import org.lazy.wanandroid.platformModule
 
 val viewModelModule = module {
-    viewModel { AppViewModel(get()) }
-    viewModel { HomeViewModel(get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel<AppViewModel>()
+    viewModel<HomeViewModel>()
+    viewModel<SettingsViewModel>()
 }
 
 @OptIn(ExperimentalSettingsApi::class)
 val dataModule = module {
-    single { create(::buildClient) }
-    single { NetworkDataSource(get()) }
+    single<HttpClient> { create(::buildClient) }
+    single<NetworkDataSource>()
 
-    single { PreferencesDataSource(get()) }
+    single<PreferencesDataSource>()
 
-    single { HomeRepository(get()) }
-    single { PreferencesRepository(get()) }
+    single<HomeRepository>()
+    single<PreferencesRepository>()
 }
 
 private fun buildClient(): HttpClient {
@@ -76,7 +77,7 @@ val navigationModule = module {
 }
 
 val appModule = module {
-    includes(platformModule, dataModule, viewModelModule, navigationModule)
+    includes(platformModule, dataModule, navigationModule, viewModelModule)
 }
 
 fun initKoin(configuration: KoinAppDeclaration? = null) {
