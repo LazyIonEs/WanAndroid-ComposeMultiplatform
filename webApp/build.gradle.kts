@@ -13,22 +13,12 @@ kotlin {
     val proxyConfig = mutableListOf(
         Proxy(
             context = mutableListOf("/api"),
-            target = "https://www.wanandroid.com",
+            target = "https://wanandroid.com",
             pathRewrite = mutableMapOf("^/api" to ""),
             changeOrigin = true,
             secure = false
         )
     )
-    js {
-        browser {
-            commonWebpackConfig {
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    proxy = proxyConfig
-                }
-            }
-        }
-        binaries.executable()
-    }
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {

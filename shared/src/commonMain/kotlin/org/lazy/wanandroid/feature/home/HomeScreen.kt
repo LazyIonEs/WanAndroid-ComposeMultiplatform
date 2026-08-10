@@ -218,7 +218,7 @@ private fun HomeScreenItem(
     val author = article.author?.ifBlank { article.shareUser } ?: ""
     val niceDate = article.niceDate?.ifBlank { article.niceShareDate } ?: ""
     ElevatedCard(
-        modifier = modifier.padding(8.dp).clickable {
+        modifier = modifier.padding(4.dp).clickable {
             onTopicClick.invoke(article)
         }
     ) {

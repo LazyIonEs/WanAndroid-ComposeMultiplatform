@@ -11,7 +11,7 @@ interface Platform {
 
 expect fun getPlatform(): Platform
 
-const val BASE_URL = "https://www.wanandroid.com/"
+const val BASE_URL = "https://wanandroid.com/"
 const val CORS_URL = "/api/"
 
 expect fun getBaseUrl(): String

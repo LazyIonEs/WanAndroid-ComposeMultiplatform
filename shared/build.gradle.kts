@@ -23,10 +23,6 @@ kotlin {
 
     jvm()
 
-    js {
-        browser()
-    }
-
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
@@ -107,6 +103,9 @@ kotlin {
             implementation(libs.multiplatform.settings)
             implementation(libs.multiplatform.settings.coroutines)
             implementation(libs.multiplatform.settings.make.observable)
+
+            // webview
+            implementation(libs.composewebview)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -117,9 +116,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.apache5)
         }
-        jsMain.dependencies {
-            implementation(libs.ktor.client.js)
-        }
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
         }
@@ -129,12 +125,6 @@ kotlin {
 compose.resources {
     customDirectory(
         sourceSetName = "wasmJsMain",
-        directoryProvider = provider {
-            layout.projectDirectory.dir("src/commonMain/webResources")
-        }
-    )
-    customDirectory(
-        sourceSetName = "jsMain",
         directoryProvider = provider {
             layout.projectDirectory.dir("src/commonMain/webResources")
         }
