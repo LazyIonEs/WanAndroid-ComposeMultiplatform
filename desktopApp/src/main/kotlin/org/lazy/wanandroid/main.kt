@@ -1,13 +1,16 @@
 package org.lazy.wanandroid
 
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
+import androidx.compose.ui.ExperimentalComposeUiApi
+import dev.nucleusframework.application.NucleusBackend
+import dev.nucleusframework.application.nucleusApplication
+import dev.nucleusframework.macoscompose.window.MacosDecoratedWindow
 import org.lazy.wanandroid.di.initKoin
 
 val koin = initKoin()
 
-fun main() = application {
-    Window(
+@OptIn(ExperimentalComposeUiApi::class)
+fun main() = nucleusApplication(backend = NucleusBackend.Tao) {
+    MacosDecoratedWindow(
         onCloseRequest = ::exitApplication,
         title = "WanAndroid",
     ) {
