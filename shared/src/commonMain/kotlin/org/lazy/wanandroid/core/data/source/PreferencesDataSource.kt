@@ -6,11 +6,10 @@ import com.russhwolf.settings.coroutines.FlowSettings
 import com.russhwolf.settings.coroutines.toFlowSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.ExperimentalSerializationApi
 import org.koin.core.annotation.Provided
 import org.lazy.wanandroid.core.data.model.DarkThemeConfig
 
-@OptIn(ExperimentalSerializationApi::class, ExperimentalSettingsApi::class)
+@OptIn(ExperimentalSettingsApi::class)
 class PreferencesDataSource(@Provided settings: ObservableSettings) {
 
     private val flowSettings: FlowSettings = settings.toFlowSettings()

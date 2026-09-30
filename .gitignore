@@ -1,19 +1,37 @@
+# Local editor and machine settings
 *.iml
+.idea/
+.vscode/
+.DS_Store
+local.properties
+
+# Gradle and Android build output
 .kotlin
 .gradle
 **/build/
-xcuserdata
 !src/**/build/
-local.properties
-.idea
-.DS_Store
 captures
 .externalNativeBuild
 .cxx
+
+# Xcode local settings
+xcuserdata
 *.xcodeproj/*
 !*.xcodeproj/project.pbxproj
 !*.xcodeproj/xcshareddata/
 !*.xcodeproj/project.xcworkspace/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
+
+# Web dependencies and generated output
 node_modules/
+webApp/dist/
+/kotlin-js-store/wasm/
+
+# Temporary files and diagnostic output
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*~

@@ -27,13 +27,19 @@ val entryModule = module {
     navigation<PlazaNavKey>(
         metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { ArticleDetailPlaceholder() })
     ) {
-        PlazaScreen()
+        val navigator = LocalNavigator.current
+        PlazaScreen(onTopicClick = { article ->
+            navigator.navigate(ArticleNavKey(article = article))
+        })
     }
 
     navigation<ProjectNavKey>(
         metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { ArticleDetailPlaceholder() })
     ) {
-        ProjectScreen()
+        val navigator = LocalNavigator.current
+        ProjectScreen(onTopicClick = { article ->
+            navigator.navigate(ArticleNavKey(article = article))
+        })
     }
 
     navigation<SettingsNavKey>(

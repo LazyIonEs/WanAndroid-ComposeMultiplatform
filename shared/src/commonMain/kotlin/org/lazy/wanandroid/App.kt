@@ -3,56 +3,34 @@ package org.lazy.wanandroid
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBackIosNew
-import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.HorizontalFloatingToolbar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.motionScheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.Typography
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.window.core.layout.WindowSizeClass
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
-import androidx.window.core.layout.WindowSizeClass
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.KoinApplication
 import org.koin.compose.navigation3.koinEntryProvider
@@ -61,121 +39,88 @@ import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.dsl.koinConfiguration
 import org.lazy.wanandroid.di.appModule
 import org.lazy.wanandroid.feature.AppState
+import org.lazy.wanandroid.feature.navigation.ArticleNavKey
 import org.lazy.wanandroid.feature.navigation.SettingsNavKey
 import org.lazy.wanandroid.feature.rememberAppState
-import org.lazy.wanandroid.navigation.LocalNavigator
-import org.lazy.wanandroid.navigation.Navigator
-import org.lazy.wanandroid.navigation.TOP_LEVEL_NAV_ITEMS
-import org.lazy.wanandroid.navigation.TOP_LEVEL_NAV_KEYS
-import org.lazy.wanandroid.navigation.toEntries
+import org.lazy.wanandroid.navigation.*
 import org.lazy.wanandroid.theme.AppTheme
 
-@OptIn(
-    KoinExperimentalAPI::class,
-    ExperimentalMaterial3ExpressiveApi::class,
-    ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class
-)
+@OptIn(KoinExperimentalAPI::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun App(
     windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfoV2(),
     typography: Typography = MaterialTheme.typography,
-    viewModel: AppViewModel = koinViewModel()
+    viewModel: AppViewModel = koinViewModel(),
 ) {
-
     val darkThemeConfig by viewModel.darkThemeConfig.collectAsState()
-
-    AppTheme(
-        darkThemeConfig = darkThemeConfig,
-        typography = typography
-    ) {
+    AppTheme(darkThemeConfig = darkThemeConfig, typography = typography) {
         val appState = rememberAppState()
-
         val navigator = remember { Navigator(appState.navigationState) }
-
-        val windowSizeClass = windowAdaptiveInfo.windowSizeClass
-
-        val wide =
-            remember { windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND) }
-
-        val enterSecondaryPage = !TOP_LEVEL_NAV_KEYS.contains(appState.navigationState.currentKey)
-
+        val currentKey = appState.navigationState.currentKey
+        val secondaryPage = currentKey !in TOP_LEVEL_NAV_KEYS
+        val wide = windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
         val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>(
             directive = calculatePaneScaffoldDirective(windowAdaptiveInfo)
         )
-
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
             topBar = {
-                AppTopBar(scrollBehavior, enterSecondaryPage, navigator)
-            },
-            snackbarHost = {
-
+                TopAppBar(
+                    title = {
+                        if (secondaryPage) {
+                            Text(
+                                when (currentKey) {
+                                    SettingsNavKey -> "设置"
+                                    is ArticleNavKey -> currentKey.article.title
+                                    else -> "WanAndroid"
+                                },
+                                maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                        } else {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Surface(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(12.dp)) {
+                                    Icon(Icons.Rounded.Code, null, Modifier.padding(8.dp).size(22.dp), tint = MaterialTheme.colorScheme.onPrimary)
+                                }
+                                Text("WanAndroid", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    },
+                    navigationIcon = {
+                        if (secondaryPage) IconButton(onClick = navigator::goBack) {
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "返回")
+                        }
+                    },
+                    actions = {
+                        if (!secondaryPage) IconButton(onClick = { navigator.navigate(SettingsNavKey) }) {
+                            Icon(Icons.Rounded.Settings, "设置")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+                    scrollBehavior = scrollBehavior,
+                )
             },
             floatingActionButton = {
-                FloatingActionBar(enterSecondaryPage, appState, navigator, wide)
+                FloatingActionBar(secondaryPage, appState, navigator, wide)
             },
             floatingActionButtonPosition = FabPosition.Center,
         ) { innerPadding ->
             CompositionLocalProvider(
                 LocalNavigator provides navigator,
                 LocalWindowAdaptiveInfo provides windowAdaptiveInfo,
-                LocalAppState provides appState
+                LocalAppState provides appState,
             ) {
                 NavDisplay(
                     entries = appState.navigationState.toEntries(koinEntryProvider()),
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
                     sceneStrategies = listOf(listDetailStrategy),
-                    onBack = { navigator.goBack() })
+                    onBack = navigator::goBack,
+                )
             }
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AppTopBar(
-    scrollBehavior: TopAppBarScrollBehavior,
-    enterSecondaryPage: Boolean,
-    navigator: Navigator
-) {
-    TopAppBar(
-        title = { Text(text = "WanAndroid") },
-        scrollBehavior = scrollBehavior,
-        actions = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AnimatedVisibility(!enterSecondaryPage) {
-                    IconButton(onClick = { }) {
-                        Icon(
-                            imageVector = Icons.Rounded.Search,
-                            contentDescription = "搜索"
-                        )
-                    }
-                }
-
-                IconButton(onClick = { navigator.navigate(SettingsNavKey) }) {
-                    Icon(
-                        imageVector = Icons.Rounded.Settings,
-                        contentDescription = "设置"
-                    )
-                }
-            }
-        },
-        navigationIcon = {
-            AnimatedVisibility(
-                visible = enterSecondaryPage,
-                enter = fadeIn() + expandHorizontally(),
-                exit = fadeOut() + shrinkHorizontally(),
-            ) {
-                IconButton(onClick = { navigator.goBack() }) {
-                    Icon(
-                        imageVector = Icons.Rounded.ArrowBackIosNew,
-                        contentDescription = "返回"
-                    )
-                }
-            }
-        })
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -245,22 +190,14 @@ private fun FloatingActionBar(
     }
 }
 
-val LocalWindowAdaptiveInfo = staticCompositionLocalOf<WindowAdaptiveInfo> {
-    error("No WindowAdaptiveInfo provided")
-}
 
-val LocalAppState = staticCompositionLocalOf<AppState> {
-    error("No AppState provided")
-}
+val LocalWindowAdaptiveInfo = staticCompositionLocalOf<WindowAdaptiveInfo> { error("No WindowAdaptiveInfo provided") }
+val LocalAppState = staticCompositionLocalOf<AppState> { error("No AppState provided") }
 
 @Preview(showBackground = true)
 @Composable
 fun AppPreview() {
-    KoinApplication(configuration = koinConfiguration {
-        modules(appModule)
-    }) {
-        MaterialTheme {
-            App()
-        }
+    KoinApplication(configuration = koinConfiguration { modules(appModule) }) {
+        MaterialTheme { App() }
     }
 }

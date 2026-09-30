@@ -1,0 +1,85 @@
+package org.lazy.wanandroid.core.network.model
+
+import kotlinx.serialization.Serializable
+
+/**
+ * 文章
+ * ```
+ * {
+ *   "adminAdd": false,
+ *   "apkLink": "",
+ *   "audit": 1,
+ *   "author": "",
+ *   "canEdit": false,
+ *   "chapterId": 502,
+ *   "chapterName": "自助",
+ *   "collect": false,
+ *   "courseId": 13,
+ *   "desc": "",
+ *   "descMd": "",
+ *   "envelopePic": "",
+ *   "fresh": true,
+ *   "host": "",
+ *   "id": 31227,
+ *   "isAdminAdd": false,
+ *   "link": "https://juejin.cn/post/7612525280755056674",
+ *   "niceDate": "11小时前",
+ *   "niceShareDate": "11小时前",
+ *   "origin": "",
+ *   "prefix": "",
+ *   "projectLink": "",
+ *   "publishTime": 1772498716000,
+ *   "realSuperChapterId": 493,
+ *   "selfVisible": 0,
+ *   "shareDate": 1772498716000,
+ *   "shareUser": "panoogunker@gmail.com",
+ *   "superChapterId": 494,
+ *   "superChapterName": "广场Tab",
+ *   "tags": [],
+ *   "title": "Compose 进阶&mdash;巧用 GraphicsLayer",
+ *   "type": 0,
+ *   "userId": 164286,
+ *   "visible": 1,
+ *   "zan": 0
+ * }
+ * ```
+ */
+@Serializable
+data class Article(
+    val adminAdd: Boolean? = null,
+    val apkLink: String? = null,
+    val audit: Int? = null,
+    val author: String? = null,
+    val canEdit: Boolean? = null,
+    val chapterId: Int? = null,
+    val chapterName: String? = null,
+    val collect: Boolean? = null,
+    val courseId: Int? = null,
+    val desc: String? = null,
+    val descMd: String? = null,
+    val envelopePic: String? = null,
+    val fresh: Boolean? = null,
+    val host: String? = null,
+    val id: Int? = null,
+    val isAdminAdd: Boolean? = null,
+    val link: String,
+    val niceDate: String? = null,
+    val niceShareDate: String? = null,
+    val origin: String? = null,
+    val prefix: String? = null,
+    val projectLink: String? = null,
+    val publishTime: Long? = null,
+    val realSuperChapterId: Int? = null,
+    val selfVisible: Int? = null,
+    val shareDate: Long? = null,
+    val shareUser: String? = null,
+    val superChapterId: Int? = null,
+    val superChapterName: String? = null,
+    val tags: List<Tag>? = null,
+    val title: String,
+    val type: Int? = null,
+    val userId: Int? = null,
+    val visible: Int? = null,
+    val zan: Int? = null,
+    val pinned: Boolean = false
+)

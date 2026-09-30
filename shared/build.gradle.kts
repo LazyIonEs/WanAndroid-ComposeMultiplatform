@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -11,22 +10,8 @@ plugins {
 }
 
 kotlin {
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "WanAndroidApp"
-            isStatic = true
-        }
-    }
-
+    jvmToolchain(21)
     jvm()
-
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-    }
 
     android {
         namespace = "org.lazy.wanandroid.library"
@@ -48,15 +33,12 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.ktor.client.okhttp)
             implementation(libs.kotlinx.coroutines.android)
 
             implementation(libs.koin.android)
         }
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
         commonMain.dependencies {
+            api(projects.sharedLogic)
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
@@ -67,6 +49,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.androidx.lifecycle.viewmodelNavigation3)
+            implementation(libs.androidx.paging.compose)
             implementation(libs.compose.material3.adaptive)
             implementation(libs.compose.material3.adaptive.layout)
             implementation(libs.compose.material3.adaptive.navigation)
@@ -74,15 +57,6 @@ kotlin {
             implementation(libs.compose.material3.adaptive.navigation3)
             implementation(libs.compose.material.icons.extended)
             implementation(libs.kotlinx.serialization.json)
-
-            // paging
-            implementation(libs.androidx.paging.compose)
-
-            // Network
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.logging)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
 
             implementation(libs.kotlinx.coroutines.core)
 
@@ -94,9 +68,6 @@ kotlin {
             implementation(libs.koin.compose.navigation3)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.koin.compose.viewmodel.navigation3)
-            implementation(libs.koin.ktor)
-
-            implementation(libs.ksoup)
 
             implementation(libs.material.kolor)
 
@@ -110,25 +81,12 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.koin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.ktor.client.apache5)
-        }
-        wasmJsMain.dependencies {
-            implementation(libs.ktor.client.js)
         }
     }
-}
-
-compose.resources {
-    customDirectory(
-        sourceSetName = "wasmJsMain",
-        directoryProvider = provider {
-            layout.projectDirectory.dir("src/commonMain/webResources")
-        }
-    )
 }
 
 dependencies {

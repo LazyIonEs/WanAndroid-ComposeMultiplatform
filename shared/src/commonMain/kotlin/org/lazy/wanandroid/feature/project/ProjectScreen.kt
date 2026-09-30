@@ -1,18 +1,10 @@
 package org.lazy.wanandroid.feature.project
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-
+import org.lazy.wanandroid.core.network.model.Article
+import org.lazy.wanandroid.feature.ui.ArticleFeedScreen
 
 @Composable
-fun ProjectScreen() {
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
-        Text("Project")
-    }
+fun ProjectScreen(onTopicClick: (Article) -> Unit) {
+    ArticleFeedScreen(section = "projects", onTopicClick = onTopicClick)
 }

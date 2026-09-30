@@ -35,4 +35,4 @@ plugins {
 include(":shared")
 include(":desktopApp")
 include(":androidApp")
-include(":webApp")
+include(":sharedLogic")
