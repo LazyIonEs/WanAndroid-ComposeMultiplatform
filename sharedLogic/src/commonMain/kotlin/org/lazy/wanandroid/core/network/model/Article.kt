@@ -81,5 +81,6 @@ data class Article(
     val userId: Int? = null,
     val visible: Int? = null,
     val zan: Int? = null,
+    val originId: Int? = null,
     val pinned: Boolean = false
 )

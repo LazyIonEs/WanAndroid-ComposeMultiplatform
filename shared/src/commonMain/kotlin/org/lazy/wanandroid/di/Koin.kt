@@ -8,31 +8,44 @@ import org.koin.dsl.includes
 import org.koin.dsl.module
 import org.koin.dsl.onClose
 import org.koin.plugin.module.dsl.single
-import org.koin.plugin.module.dsl.viewModel
 import org.lazy.wanandroid.AppViewModel
+import org.lazy.wanandroid.SessionStorage
 import org.lazy.wanandroid.core.data.repository.PreferencesRepository
+import org.lazy.wanandroid.core.data.repository.SessionRepository
 import org.lazy.wanandroid.core.data.source.ArticleService
 import org.lazy.wanandroid.core.data.source.PreferencesDataSource
+import org.lazy.wanandroid.core.data.source.SettingsSessionStorage
 import org.lazy.wanandroid.createArticleService
+import org.lazy.wanandroid.feature.auth.AuthViewModel
+import org.lazy.wanandroid.feature.coin.CoinViewModel
+import org.lazy.wanandroid.feature.collect.CollectViewModel
 import org.lazy.wanandroid.feature.feed.FeedViewModel
 import org.lazy.wanandroid.feature.navigation.entryModule
+import org.lazy.wanandroid.feature.profile.ProfileViewModel
+import org.lazy.wanandroid.feature.search.SearchViewModel
 import org.lazy.wanandroid.feature.settings.SettingsViewModel
 import org.lazy.wanandroid.platformModule
-import org.koin.core.module.dsl.viewModel as parameterizedViewModel
+import org.koin.core.module.dsl.viewModel
 
 val viewModelModule = module {
-    viewModel<AppViewModel>()
-    viewModel<SettingsViewModel>()
-    parameterizedViewModel { parameters -> FeedViewModel(parameters.get(), get()) }
+    viewModel { AppViewModel(get(), get()) }
+    viewModel { SettingsViewModel(get()) }
+    viewModel { parameters -> FeedViewModel(parameters.get(), get()) }
+    viewModel { SearchViewModel(get(), get()) }
+    viewModel { ProfileViewModel(get()) }
+    viewModel { AuthViewModel(get()) }
+    viewModel { CollectViewModel(get(), get()) }
+    viewModel { CoinViewModel(get(), get()) }
 }
 
 @OptIn(ExperimentalSettingsApi::class)
 val dataModule = module {
-    single<ArticleService> { createArticleService() } onClose { it?.close() }
+    single<SessionStorage> { SettingsSessionStorage(get()) }
+    single<ArticleService> { createArticleService(get<SessionStorage>()) } onClose { it?.close() }
 
     single<PreferencesDataSource>()
-
     single<PreferencesRepository>()
+    single { SessionRepository(get(), get()) }
 }
 
 val navigationModule = module {

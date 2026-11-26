@@ -1,5 +1,6 @@
 package org.lazy.wanandroid
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandHorizontally
@@ -11,13 +12,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Code
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
@@ -26,7 +29,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
@@ -41,6 +45,7 @@ import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -56,7 +61,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
 import androidx.window.core.layout.WindowSizeClass
-import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.KoinApplication
 import org.koin.compose.navigation3.koinEntryProvider
 import org.koin.compose.viewmodel.koinViewModel
@@ -65,6 +69,13 @@ import org.koin.dsl.koinConfiguration
 import org.lazy.wanandroid.di.appModule
 import org.lazy.wanandroid.feature.AppState
 import org.lazy.wanandroid.feature.navigation.ArticleNavKey
+import org.lazy.wanandroid.feature.navigation.AuthNavKey
+import org.lazy.wanandroid.feature.navigation.CoinRankNavKey
+import org.lazy.wanandroid.feature.navigation.CollectNavKey
+import org.lazy.wanandroid.feature.navigation.PlazaNavKey
+import org.lazy.wanandroid.feature.navigation.ProfileNavKey
+import org.lazy.wanandroid.feature.navigation.ProjectNavKey
+import org.lazy.wanandroid.feature.navigation.SearchNavKey
 import org.lazy.wanandroid.feature.navigation.SettingsNavKey
 import org.lazy.wanandroid.feature.rememberAppState
 import org.lazy.wanandroid.navigation.LocalNavigator
@@ -74,7 +85,7 @@ import org.lazy.wanandroid.navigation.TOP_LEVEL_NAV_KEYS
 import org.lazy.wanandroid.navigation.toEntries
 import org.lazy.wanandroid.theme.AppTheme
 
-@OptIn(KoinExperimentalAPI::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(KoinExperimentalAPI::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun App(
     windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfoV2(),
@@ -82,11 +93,21 @@ fun App(
     viewModel: AppViewModel = koinViewModel(),
 ) {
     val darkThemeConfig by viewModel.darkThemeConfig.collectAsState()
+    val sessionState by viewModel.sessionState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(viewModel) {
+        viewModel.sessionEvents.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     AppTheme(darkThemeConfig = darkThemeConfig, typography = typography) {
         val appState = rememberAppState()
         val navigator = remember { Navigator(appState.navigationState) }
         val currentKey = appState.navigationState.currentKey
         val secondaryPage = currentKey !in TOP_LEVEL_NAV_KEYS
+        val hideOuterTopBar = currentKey is SearchNavKey || currentKey is ArticleNavKey
         val wide = windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
         val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>(
             directive = calculatePaneScaffoldDirective(windowAdaptiveInfo)
@@ -95,41 +116,90 @@ fun App(
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        if (secondaryPage) {
-                            Text(
-                                when (currentKey) {
-                                    SettingsNavKey -> "设置"
-                                    is ArticleNavKey -> currentKey.article.title
-                                    else -> "WanAndroid"
-                                },
-                                maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        } else {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Surface(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(12.dp)) {
-                                    Icon(Icons.Rounded.Code, null, Modifier.padding(8.dp).size(22.dp), tint = MaterialTheme.colorScheme.onPrimary)
-                                }
-                                Text("WanAndroid", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    },
-                    navigationIcon = {
-                        if (secondaryPage) IconButton(onClick = navigator::goBack) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "返回")
-                        }
-                    },
-                    actions = {
-                        if (!secondaryPage) IconButton(onClick = { navigator.navigate(SettingsNavKey) }) {
-                            Icon(Icons.Rounded.Settings, "设置")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                    scrollBehavior = scrollBehavior,
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = if (!secondaryPage) Modifier.padding(bottom = 84.dp) else Modifier,
                 )
+            },
+            topBar = {
+                if (!hideOuterTopBar) {
+                    TopAppBar(
+                        title = {
+                            if (secondaryPage) {
+                                Text(
+                                    when (currentKey) {
+                                        SettingsNavKey -> "外观与设置"
+                                        ProfileNavKey -> "个人中心"
+                                        AuthNavKey -> "账号登录"
+                                        CollectNavKey -> "我的收藏"
+                                        is CoinRankNavKey -> "积分与排行"
+                                        is ArticleNavKey -> currentKey.article.title
+                                        else -> "WanAndroid"
+                                    },
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                            } else {
+                                val topTitle = when (currentKey) {
+                                    PlazaNavKey -> "社区广场"
+                                    ProjectNavKey -> "开源项目"
+                                    else -> "WanAndroid"
+                                }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Code,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(26.dp),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                    AnimatedContent(targetState = topTitle) { title ->
+                                        Text(
+                                            title,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        navigationIcon = {
+                            if (secondaryPage) IconButton(onClick = navigator::goBack) {
+                                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "返回")
+                            }
+                        },
+                        actions = {
+                            if (!secondaryPage) {
+                                IconButton(onClick = { navigator.navigate(SearchNavKey) }) {
+                                    Icon(Icons.Rounded.Search, "搜索")
+                                }
+                                IconButton(onClick = { navigator.navigate(ProfileNavKey) }) {
+                                    BadgedBox(
+                                        badge = {
+                                            if (sessionState.isLoggedIn) {
+                                                Badge(containerColor = MaterialTheme.colorScheme.primary)
+                                            }
+                                        },
+                                    ) {
+                                        Icon(
+                                            imageVector = if (sessionState.isLoggedIn) Icons.Rounded.AccountCircle else Icons.Outlined.AccountCircle,
+                                            contentDescription = "个人中心",
+                                        )
+                                    }
+                                }
+                                IconButton(onClick = { navigator.navigate(SettingsNavKey) }) {
+                                    Icon(Icons.Rounded.Settings, "设置")
+                                }
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+                        scrollBehavior = scrollBehavior,
+                    )
+                }
             },
             floatingActionButton = {
                 FloatingActionBar(secondaryPage, appState, navigator, wide)
@@ -185,17 +255,13 @@ private fun FloatingActionBar(
                                 enter = expandHorizontally(motionScheme.defaultSpatialSpec()),
                                 exit = shrinkHorizontally(motionScheme.defaultSpatialSpec())
                             ) {
-                                Crossfade(selected) {
-                                    if (it) Icon(
-                                        modifier = Modifier.padding(end = ToggleButtonDefaults.IconSpacing)
+                                Crossfade(selected) { isSelected ->
+                                    Icon(
+                                        modifier = Modifier
+                                            .padding(end = ToggleButtonDefaults.IconSpacing)
                                             .size(ToggleButtonDefaults.IconSize),
-                                        painter = painterResource(navItem.selectedIcon),
-                                        contentDescription = navItem.label
-                                    ) else Icon(
-                                        modifier = Modifier.padding(end = ToggleButtonDefaults.IconSpacing)
-                                            .size(ToggleButtonDefaults.IconSize),
-                                        painter = painterResource(navItem.unselectedIcon),
-                                        contentDescription = navItem.label
+                                        imageVector = if (isSelected) navItem.selectedIcon else navItem.unselectedIcon,
+                                        contentDescription = navItem.label,
                                     )
                                 }
                             }

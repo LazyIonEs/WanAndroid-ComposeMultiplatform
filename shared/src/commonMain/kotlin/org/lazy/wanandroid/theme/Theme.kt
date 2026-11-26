@@ -13,6 +13,14 @@ import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.material3.rememberDynamicColorScheme
 import org.lazy.wanandroid.core.data.model.DarkThemeConfig
 
+object WanAccents {
+    val Gold = Color(0xFFD99B26)
+    val Silver = Color(0xFF8E9BA8)
+    val Bronze = Color(0xFFC07A4B)
+    val HeartRed = Color(0xFFE5484D)
+    val HotOrange = Color(0xFFEA580C)
+    val EmeraldGlow = Color(0xFF2E7D5B)
+}
 
 @Composable
 fun AppTheme(
@@ -37,11 +45,40 @@ fun AppTheme(
         colorScheme = colorScheme,
         motionScheme = MotionScheme.expressive(),
         typography = typography.copy(
-            headlineMedium = typography.headlineMedium.copy(fontWeight = FontWeight.Bold, fontSize = 28.sp, lineHeight = 38.sp),
-            titleLarge = typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 31.sp),
-            titleMedium = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 17.sp, lineHeight = 26.sp),
-            bodyMedium = typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 23.sp),
-            labelLarge = typography.labelLarge.copy(fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
+            headlineMedium = typography.headlineMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 26.sp,
+                lineHeight = 35.sp,
+                letterSpacing = (-0.3).sp,
+            ),
+            titleLarge = typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 21.sp,
+                lineHeight = 29.sp,
+            ),
+            titleMedium = typography.titleMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                lineHeight = 24.sp,
+            ),
+            titleSmall = typography.titleSmall.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+            ),
+            bodyMedium = typography.bodyMedium.copy(
+                fontSize = 14.sp,
+                lineHeight = 22.sp,
+            ),
+            bodySmall = typography.bodySmall.copy(
+                fontSize = 12.sp,
+                lineHeight = 18.sp,
+            ),
+            labelLarge = typography.labelLarge.copy(
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+            ),
         ),
         content = content
     )

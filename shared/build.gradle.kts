@@ -36,6 +36,7 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.ktor.client.okhttp)
 
             implementation(libs.koin.android)
         }
@@ -72,6 +73,8 @@ kotlin {
             implementation(libs.koin.compose.viewmodel.navigation3)
 
             implementation(libs.material.kolor)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
 
             implementation(libs.multiplatform.settings)
             implementation(libs.multiplatform.settings.coroutines)
@@ -87,6 +90,7 @@ kotlin {
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
+            implementation(libs.ktor.client.okhttp)
         }
     }
 }

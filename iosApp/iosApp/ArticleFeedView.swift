@@ -1,12 +1,14 @@
-import SafariServices
 import SwiftUI
 
 struct ArticleFeedView: View {
     let section: AppSection
     @ObservedObject var store: WanAndroidStore
     let onExplore: (AppSection) -> Void
+    let onRequestAuth: () -> Void
+
     @State private var selectedArticle: NativeArticle?
-    @State private var refreshingFromGesture = false
+    @State private var showCoinRank = false
+    @State private var showCollect = false
 
     private var feed: NativeFeedState { store.state.feed(for: section) }
     private var categoryLoading: Bool { section == .projects && store.state.categoriesLoading }
@@ -22,64 +24,143 @@ struct ArticleFeedView: View {
     var body: some View {
         ScrollViewReader { proxy in
             List {
-                Group {
-                    FeedIntroduction(section: section, onExplore: onExplore)
-                        .id("feed-top")
-                    if section == .projects && !store.state.categories.isEmpty {
-                        categoryPicker
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                            .id("category-picker")
+                if section == .home {
+                    if !store.state.banners.isEmpty {
+                        Section {
+                            BannerCarouselView(banners: store.state.banners) { banner in
+                                selectedArticle = NativeArticle(
+                                    articleID: nil,
+                                    originId: nil,
+                                    title: banner.title.isEmpty ? "精选推荐" : banner.title,
+                                    link: banner.url,
+                                    author: nil,
+                                    shareUser: nil,
+                                    niceDate: nil,
+                                    niceShareDate: nil,
+                                    chapterName: nil,
+                                    superChapterName: nil,
+                                    desc: banner.desc,
+                                    envelopePic: nil,
+                                    fresh: nil,
+                                    collect: nil,
+                                    pinned: nil,
+                                    tags: nil
+                                )
+                            }
+                            .listRowInsets(EdgeInsets())
+                        }
                     }
 
-                    if initialLoading {
-                        loadingState
-                    } else if feed.articles.isEmpty {
-                        if feed.loaded && feed.hasMore && error == nil {
-                            pagination
-                        } else {
-                            emptyState
+                    Section {
+                        HomeQuickActionsView(
+                            onOpenCoinRank: { showCoinRank = true },
+                            onOpenCollect: { showCollect = true },
+                            onOpenProjects: { onExplore(.projects) },
+                            onOpenPlaza: { onExplore(.plaza) }
+                        )
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
+                    }
+                }
+
+                if section == .projects && !store.state.categories.isEmpty {
+                    Section("探索分类（\(store.state.categories.count)）") {
+                        categoryPicker
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets())
+                    }
+                    .id("category-picker")
+                }
+
+                if initialLoading {
+                    Section {
+                        HStack {
+                            Spacer()
+                            ProgressView(categoryLoading ? "正在加载项目分类…" : "正在加载…")
+                                .padding(.vertical, 32)
+                            Spacer()
                         }
+                    }
+                } else if feed.articles.isEmpty {
+                    if feed.loaded && feed.hasMore && error == nil {
+                        Section { pagination }
                     } else {
-                        if let error, feed.failedToLoadMore != true {
+                        Section { emptyState }
+                    }
+                } else {
+                    if let error, feed.failedToLoadMore != true {
+                        Section {
                             ErrorRow(message: error) { store.retry(section) }
                         }
-                        FeedSectionHeading(title: sectionHeading, detail: "已载入 \(feed.articles.count) 篇")
+                    }
+
+                    Section {
                         ForEach(feed.articles) { article in
+                            let collected = store.isCollected(article)
                             Button {
                                 selectedArticle = article
                             } label: {
-                                ArticleRow(article: article, showImage: section == .projects, featured: section == .home && article.pinned == true)
+                                ArticleRow(
+                                    article: article,
+                                    showImage: section == .projects,
+                                    featured: section == .home && article.pinned == true,
+                                    isCollected: collected,
+                                    onToggleCollect: {
+                                        handleToggleCollect(article)
+                                    }
+                                )
                             }
                             .buttonStyle(.plain)
                             .disabled(article.url == nil)
-                            .accessibilityHint(article.url == nil ? "链接不可用" : "打开文章详情")
+                            .swipeActions(edge: .trailing) {
+                                if let targetID = article.collectTargetID {
+                                    Button {
+                                        handleToggleCollect(article, targetID: targetID)
+                                    } label: {
+                                        Label(collected ? "取消收藏" : "收藏", systemImage: collected ? "heart.slash" : "heart")
+                                    }
+                                    .tint(collected ? .gray : ReadingStyle.heartRed)
+                                }
+                            }
                             .contextMenu {
+                                if let targetID = article.collectTargetID {
+                                    Button {
+                                        handleToggleCollect(article, targetID: targetID)
+                                    } label: {
+                                        Label(
+                                            collected ? "取消收藏" : "收藏文章",
+                                            systemImage: collected ? "heart.slash" : "heart"
+                                        )
+                                    }
+                                }
                                 if let url = article.url {
                                     ShareLink(item: url) { Label("分享文章", systemImage: "square.and.arrow.up") }
                                 }
                             }
                         }
-                        pagination
+                    } header: {
+                        HStack {
+                            Text(sectionHeading)
+                            Spacer()
+                            Text("已载入 \(feed.articles.count) 篇")
+                        }
                     }
+
+                    Section { pagination }
                 }
-                .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(ReadingStyle.canvas)
-            .frame(maxWidth: 760)
-            .frame(maxWidth: .infinity)
-            .background(ReadingStyle.canvas)
+            .listStyle(.insetGrouped)
             .refreshable {
-                refreshingFromGesture = true
-                defer { refreshingFromGesture = false }
                 await store.refresh(section)
             }
             .navigationTitle(section == .home ? "WanAndroid" : section.title)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(isPresented: $showCoinRank) {
+                CoinRankView(store: store, initialTab: 0, onRequestAuth: onRequestAuth)
+            }
+            .navigationDestination(isPresented: $showCollect) {
+                CollectListView(store: store, onRequestAuth: onRequestAuth)
+            }
             .onChange(of: store.state.selectedProjectId) { previous, _ in
                 if section == .projects && previous != nil { proxy.scrollTo("category-picker", anchor: .top) }
             }
@@ -92,51 +173,57 @@ struct ArticleFeedView: View {
         }
     }
 
+    private func handleToggleCollect(_ article: NativeArticle, targetID: Int? = nil) {
+        guard let id = targetID ?? article.collectTargetID else { return }
+        if !store.isLoggedIn {
+            onRequestAuth()
+        } else {
+            store.toggleCollect(articleId: id)
+        }
+    }
+
     private var sectionHeading: String {
         switch section {
         case .home: "精选与新知"
         case .plaza: "最新分享"
         case .projects: store.state.categories.first { $0.id == store.state.selectedProjectId }?.name ?? "项目列表"
-        case .settings: ""
+        case .profile, .search: ""
         }
     }
 
     private var categoryPicker: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            FeedSectionHeading(title: "探索分类", detail: "\(store.state.categories.count) 个方向")
+        ScrollViewReader { chipProxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(store.state.categories) { category in
                         let selected = store.state.selectedProjectId == category.id
-                        Button { store.selectCategory(category.id) } label: {
-                            Text(category.name)
-                                .font(.subheadline.weight(selected ? .semibold : .regular))
-                                .foregroundStyle(selected ? Color(uiColor: .systemBackground) : Color.primary)
-                                .padding(.horizontal, 16)
-                                .frame(minHeight: 44)
-                                .background(selected ? Color.accentColor : ReadingStyle.card, in: Capsule())
+                        if selected {
+                            Button(category.name) {
+                                store.selectCategory(category.id)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .buttonBorderShape(.capsule)
+                            .id(category.id)
+                        } else {
+                            Button(category.name) {
+                                store.selectCategory(category.id)
+                            }
+                            .buttonStyle(.bordered)
+                            .buttonBorderShape(.capsule)
+                            .id(category.id)
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityAddTraits(selected ? .isSelected : [])
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+            .onChange(of: store.state.selectedProjectId) { _, newValue in
+                if let newValue {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        chipProxy.scrollTo(newValue, anchor: .center)
                     }
                 }
             }
         }
-    }
-
-    private var loadingState: some View {
-        HStack {
-            Spacer()
-            if refreshingFromGesture {
-                Text(categoryLoading ? "正在加载项目分类…" : "正在加载…")
-                    .font(.subheadline).foregroundStyle(.secondary)
-            } else {
-                ProgressView(categoryLoading ? "正在加载项目分类…" : "正在加载…")
-            }
-            Spacer()
-        }
-        .frame(minHeight: 300)
-        .listRowSeparator(.hidden)
     }
 
     private var emptyState: some View {
@@ -151,8 +238,7 @@ struct ArticleFeedView: View {
                     .disabled(feed.busy || categoryLoading)
             }
         }
-        .frame(minHeight: 300)
-        .listRowSeparator(.hidden)
+        .frame(minHeight: 260)
     }
 
     private var emptyTitle: String {
@@ -163,8 +249,6 @@ struct ArticleFeedView: View {
 
     @ViewBuilder
     private var pagination: some View {
-        // A fresh row identity lets List decide visibility after each page is applied.
-        // It also rechecks the end after an empty page that still has a next page.
         ForEach([paginationIdentity], id: \.self) { _ in
             HStack {
                 Spacer()
@@ -188,13 +272,13 @@ struct ArticleFeedView: View {
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                 } else {
-                    Text("本页已读完，明天也来发现新知").font(.footnote).foregroundStyle(.secondary)
+                    Text("本页已读完，明天也来发现新知")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
                 Spacer()
             }
-            .frame(minHeight: feed.articles.isEmpty ? 300 : 0)
-            .padding(.vertical, 20)
-            .listRowSeparator(.hidden)
+            .padding(.vertical, 6)
             .onAppear(perform: loadNextPageIfNeeded)
         }
     }
@@ -228,25 +312,12 @@ private struct ErrorRow: View {
     let retry: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        LabeledContent {
+            Button("重试", action: retry)
+        } label: {
             Label(message, systemImage: "exclamationmark.circle")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Button("重试", action: retry)
         }
-        .padding(.vertical, 8)
     }
-}
-
-/// System browser supplies article rendering, navigation, sharing and Safari hand-off.
-private struct ArticleBrowser: UIViewControllerRepresentable {
-    let url: URL
-
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        let configuration = SFSafariViewController.Configuration()
-        configuration.entersReaderIfAvailable = false
-        return SFSafariViewController(url: url, configuration: configuration)
-    }
-
-    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
 }

@@ -4,13 +4,20 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.lazy.wanandroid.core.data.source.ArticleService
 import org.lazy.wanandroid.core.data.source.NetworkDataSource
 
 /** The owner must close this service when its application scope ends. */
-fun createArticleService(): ArticleService = NetworkDataSource(createNetworkClient(), platformBaseUrl())
+fun createArticleService(): ArticleService = createArticleService(platformSessionStorage())
+
+/** The owner must close this service when its application scope ends. */
+fun createArticleService(storage: SessionStorage): ArticleService {
+    val cookieStorage = PersistentCookiesStorage(storage)
+    return NetworkDataSource(createNetworkClient(cookieStorage), platformBaseUrl(), cookieStorage)
+}
 
 internal val wireJson = Json {
     ignoreUnknownKeys = true
@@ -21,7 +28,7 @@ internal val wireJson = Json {
 internal expect fun platformHttpClient(config: HttpClientConfig<*>.() -> Unit): HttpClient
 internal expect fun platformBaseUrl(): String
 
-internal fun createNetworkClient() = platformHttpClient {
+internal fun createNetworkClient(cookieStorage: PersistentCookiesStorage? = null) = platformHttpClient {
     expectSuccess = true
     install(HttpTimeout) {
         requestTimeoutMillis = 30_000
@@ -30,5 +37,10 @@ internal fun createNetworkClient() = platformHttpClient {
     }
     install(ContentNegotiation) {
         json(wireJson)
+    }
+    if (cookieStorage != null) {
+        install(HttpCookies) {
+            storage = cookieStorage
+        }
     }
 }

@@ -8,8 +8,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.lazy.wanandroid.core.data.model.DarkThemeConfig
 import org.lazy.wanandroid.core.data.repository.PreferencesRepository
+import org.lazy.wanandroid.core.data.repository.SessionRepository
 
-class AppViewModel(private val repository: PreferencesRepository) : ViewModel() {
+class AppViewModel(
+    private val repository: PreferencesRepository,
+    private val sessionRepository: SessionRepository,
+) : ViewModel() {
 
     val darkThemeConfig: StateFlow<DarkThemeConfig> =
         repository.darkThemeConfig.stateIn(
@@ -17,6 +21,15 @@ class AppViewModel(private val repository: PreferencesRepository) : ViewModel() 
             started = Eagerly,
             initialValue = DarkThemeConfig.FOLLOW_SYSTEM
         )
+
+    val sessionState = sessionRepository.state
+    val sessionEvents = sessionRepository.events
+
+    init {
+        viewModelScope.launch {
+            sessionRepository.restoreSession()
+        }
+    }
 
     fun saveAppThemeConfig(darkThemeConfig: DarkThemeConfig) {
         viewModelScope.launch {

@@ -14,6 +14,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -25,7 +26,9 @@ import org.lazy.wanandroid.articleFirstPage
 import org.lazy.wanandroid.core.data.source.ArticleService
 import org.lazy.wanandroid.core.data.source.NetworkDataSource
 import org.lazy.wanandroid.core.network.model.Article
+import org.lazy.wanandroid.core.network.model.BannerItem
 import org.lazy.wanandroid.feedErrorMessage
+import org.lazy.wanandroid.toDisplayBanner
 import org.lazy.wanandroid.toDisplayCategory
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -35,7 +38,12 @@ class FeedViewModel(
 ) : ViewModel() {
     private val mutableCategories = MutableStateFlow(CategoryState(loading = section == "projects"))
     val categories = mutableCategories.asStateFlow()
+
+    private val mutableBanners = MutableStateFlow<List<BannerItem>>(emptyList())
+    val banners: StateFlow<List<BannerItem>> = mutableBanners.asStateFlow()
+
     private var categoriesJob: Job? = null
+    private var bannersJob: Job? = null
     private val pinnedArticles = PinnedArticleCache()
 
     val articles: Flow<PagingData<Article>> = (if (section == "projects") {
@@ -57,6 +65,7 @@ class FeedViewModel(
     init {
         articleFirstPage(section) // Validate before a collector starts a network request.
         if (section == "projects") loadCategories()
+        if (section == "home") loadBanners()
     }
 
     fun selectCategory(id: Int) {
@@ -72,6 +81,10 @@ class FeedViewModel(
         if (categories.value.items.isEmpty()) loadCategories()
     }
 
+    fun refreshBanners() {
+        if (section == "home") loadBanners()
+    }
+
     private fun pager(categoryId: Int?): Pager<Int, Article> = Pager(
         config = PagingConfig(
             pageSize = NetworkDataSource.NETWORK_PAGE_SIZE,
@@ -81,6 +94,23 @@ class FeedViewModel(
         ),
         pagingSourceFactory = { ArticlePagingSource(service, section, categoryId, pinnedArticles) },
     )
+
+    private fun loadBanners() {
+        if (bannersJob?.isActive == true) return
+        bannersJob = viewModelScope.launch {
+            try {
+                val items = service.banners().map { it.toDisplayBanner() }
+                ensureActive()
+                if (items.isNotEmpty()) {
+                    mutableBanners.value = items
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                // Preserve previously loaded banners on transient failure.
+            }
+        }
+    }
 
     private fun loadCategories() {
         if (section != "projects" || categoriesJob?.isActive == true) return

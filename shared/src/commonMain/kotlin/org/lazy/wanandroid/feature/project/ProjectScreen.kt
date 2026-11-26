@@ -5,6 +5,13 @@ import org.lazy.wanandroid.core.network.model.Article
 import org.lazy.wanandroid.feature.ui.ArticleFeedScreen
 
 @Composable
-fun ProjectScreen(onTopicClick: (Article) -> Unit) {
-    ArticleFeedScreen(section = "projects", onTopicClick = onTopicClick)
+fun ProjectScreen(
+    onTopicClick: (Article) -> Unit,
+    onOpenAuth: () -> Unit = {},
+) {
+    ArticleFeedScreen(
+        section = "projects",
+        onTopicClick = onTopicClick,
+        onOpenAuth = onOpenAuth,
+    )
 }

@@ -2,7 +2,7 @@ import Combine
 import Foundation
 import SharedLogic
 
-/// Swift owns presentation only. Networking, paging and category selection live in SharedLogic.
+/// Swift owns presentation only. Networking, cookies, paging and category selection live in SharedLogic.
 @MainActor
 final class WanAndroidStore: ObservableObject {
     @Published private(set) var state = NativeAppState()
@@ -13,10 +13,19 @@ final class WanAndroidStore: ObservableObject {
     private var activated: Set<AppSection> = []
     private var refreshWaiters: [AppSection: RefreshWaiter] = [:]
 
+    var isLoggedIn: Bool { state.user != nil }
+    var collectedIDSet: Set<Int> { Set(state.collectedIds) }
+
+    func isCollected(_ article: NativeArticle) -> Bool {
+        if let targetID = article.collectTargetID, collectedIDSet.contains(targetID) {
+            return true
+        }
+        return isLoggedIn && article.collect == true
+    }
+
     func start() {
         guard subscription == nil else { return }
         subscription = client.watch { [weak self] json in
-            // SharedLogic may deliver on a background dispatcher. SwiftUI updates stay on main.
             Task { @MainActor [weak self] in self?.receive(json) }
         }
         activated.insert(.home)
@@ -24,12 +33,19 @@ final class WanAndroidStore: ObservableObject {
     }
 
     func activate(_ section: AppSection) {
-        guard section != .settings, activated.insert(section).inserted else { return }
-        client.refresh(section: section.rawValue)
+        switch section {
+        case .home, .plaza, .projects:
+            guard activated.insert(section).inserted else { return }
+            client.refresh(section: section.rawValue)
+        case .profile:
+            if isLoggedIn { client.refreshUserInfo() }
+        case .search:
+            if state.hotKeys.isEmpty { client.loadHotKeys() }
+        }
     }
 
     func refresh(_ section: AppSection) async {
-        guard section != .settings else { return }
+        guard section == .home || section == .plaza || section == .projects else { return }
         let requestID = UUID()
         await withTaskCancellationHandler {
             await withCheckedContinuation { continuation in
@@ -40,8 +56,6 @@ final class WanAndroidStore: ObservableObject {
                 finishRefresh(section)
                 refreshWaiters[section] = RefreshWaiter(id: requestID, continuation: continuation)
                 client.refresh(section: section.rawValue)
-                // Subscribe AFTER dispatch: the immediate snapshot belongs to this refresh.
-                // StateFlow may conflate busy and idle, so completion must not require a busy edge.
                 refreshWaiters[section]?.subscription = client.watch { [weak self] json in
                     Task { @MainActor [weak self] in
                         self?.receiveRefresh(json, section: section, requestID: requestID)
@@ -75,6 +89,90 @@ final class WanAndroidStore: ObservableObject {
         client.selectProject(categoryId: Int32(id))
     }
 
+    func loadHotKeys() {
+        client.loadHotKeys()
+    }
+
+    func search(_ keyword: String) {
+        client.search(keyword: keyword)
+    }
+
+    func loadMoreSearch() {
+        client.loadMoreSearch()
+    }
+
+    func clearSearch() {
+        client.clearSearch()
+    }
+
+    func removeSearchHistory(_ keyword: String) {
+        client.removeSearchHistory(keyword: keyword)
+    }
+
+    func clearSearchHistory() {
+        client.clearSearchHistory()
+    }
+
+    func login(username: String, password: String) {
+        client.login(username: username, password: password)
+    }
+
+    func register(username: String, password: String, repassword: String) {
+        client.register(username: username, password: password, repassword: repassword)
+    }
+
+    func logout() {
+        client.logout()
+    }
+
+    func refreshUserInfo() {
+        client.refreshUserInfo()
+    }
+
+    func clearAuthError() {
+        client.clearAuthError()
+    }
+
+    func clearActionMessage() {
+        client.clearActionMessage()
+    }
+
+    func toggleCollect(articleId: Int) {
+        client.toggleCollect(articleId: Int32(articleId))
+    }
+
+    func refreshCollections() {
+        client.refreshCollections()
+    }
+
+    func loadMoreCollections() {
+        client.loadMoreCollections()
+    }
+
+    func uncollectFromMine(id: Int, originId: Int) {
+        client.uncollectFromMine(id: Int32(id), originId: Int32(originId))
+    }
+
+    func collectExternal(title: String, author: String, link: String) {
+        client.collectExternal(title: title, author: author, link: link)
+    }
+
+    func refreshCoinRank() {
+        client.refreshCoinRank()
+    }
+
+    func loadMoreCoinRank() {
+        client.loadMoreCoinRank()
+    }
+
+    func refreshCoinHistory() {
+        client.refreshCoinHistory()
+    }
+
+    func loadMoreCoinHistory() {
+        client.loadMoreCoinHistory()
+    }
+
     private func receiveRefresh(_ json: String, section: AppSection, requestID: UUID) {
         guard refreshWaiters[section]?.id == requestID else { return }
         guard let snapshot = try? JSONDecoder().decode(NativeAppState.self, from: Data(json.utf8)) else {
@@ -82,7 +180,6 @@ final class WanAndroidStore: ObservableObject {
             return
         }
         let feed = snapshot.feed(for: section)
-        // Category loading can emit an idle snapshot just before the first project's request.
         let waitingForFirstProject = section == .projects && snapshot.selectedProjectId != nil
             && !feed.loaded && feed.error == nil
         let refreshing = feed.loading || feed.refreshing

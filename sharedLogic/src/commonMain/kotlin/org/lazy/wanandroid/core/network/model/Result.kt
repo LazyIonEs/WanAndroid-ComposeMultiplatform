@@ -2,6 +2,10 @@ package org.lazy.wanandroid.core.network.model
 
 import kotlinx.serialization.Serializable
 
+const val ERROR_NOT_LOGGED_IN = -1001
+
+class AuthExpiredException(message: String) : IllegalStateException(message)
+
 /**
  * 数据结构
  *

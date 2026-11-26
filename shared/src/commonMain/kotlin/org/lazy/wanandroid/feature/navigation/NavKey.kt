@@ -17,4 +17,19 @@ data object ProjectNavKey : NavKey
 data object SettingsNavKey : NavKey
 
 @Serializable
+data object SearchNavKey : NavKey
+
+@Serializable
+data object ProfileNavKey : NavKey
+
+@Serializable
+data object AuthNavKey : NavKey
+
+@Serializable
+data object CollectNavKey : NavKey
+
+@Serializable
+data class CoinRankNavKey(val initialTab: Int = 0) : NavKey
+
+@Serializable
 data class ArticleNavKey(val article: Article) : NavKey

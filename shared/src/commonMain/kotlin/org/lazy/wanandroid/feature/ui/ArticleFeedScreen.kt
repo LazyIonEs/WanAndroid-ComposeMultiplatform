@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -20,8 +21,11 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import org.lazy.wanandroid.collectArticleId
+import org.lazy.wanandroid.core.data.repository.SessionRepository
 import org.lazy.wanandroid.core.network.model.Article
 import org.lazy.wanandroid.feature.feed.FeedViewModel
 import org.lazy.wanandroid.feedErrorMessage
@@ -32,13 +36,20 @@ import org.lazy.wanandroid.feedKey
 fun ArticleFeedScreen(
     section: String,
     onTopicClick: (Article) -> Unit,
-    onExplore: ((String) -> Unit)? = null,
+    onOpenSearch: () -> Unit = {},
+    onOpenCollect: () -> Unit = {},
+    onOpenCoinRank: () -> Unit = {},
+    onOpenProjects: () -> Unit = {},
+    onOpenAuth: () -> Unit = {},
     viewModel: FeedViewModel = koinViewModel(
         key = "feed:$section",
         parameters = { parametersOf(section) },
     ),
+    sessionRepository: SessionRepository = koinInject(),
 ) {
     val categories by viewModel.categories.collectAsStateWithLifecycle()
+    val banners by viewModel.banners.collectAsStateWithLifecycle()
+    val sessionState by sessionRepository.state.collectAsStateWithLifecycle()
     val articles = viewModel.articles.collectAsLazyPagingItems()
     val isProjects = section == "projects"
     val needsCategories = isProjects && categories.items.isEmpty()
@@ -48,14 +59,21 @@ fun ArticleFeedScreen(
     val refreshError = (refresh as? LoadState.Error)?.error?.feedErrorMessage()
     val appendError = (append as? LoadState.Error)?.error?.feedErrorMessage()
     val listState = key(section, categories.selectedId) { rememberLazyListState() }
+    val categoryRowState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
-    val scrollScope = rememberCoroutineScope()
+    LaunchedEffect(categories.selectedId, categories.items.size) {
+        val selectedIndex = categories.items.indexOfFirst { it.id == categories.selectedId }
+        if (selectedIndex >= 0) {
+            categoryRowState.animateScrollToItem(selectedIndex)
+        }
+    }
 
     FeedRefreshContainer(
-        // Initial/empty loads have a centered indicator; populated lists keep their rows.
         isRefreshing = !empty && refresh is LoadState.Loading,
         onRefresh = {
-            scrollScope.launch { listState.scrollToItem(0) }
+            scope.launch { listState.scrollToItem(0) }
+            if (section == "home") viewModel.refreshBanners()
             if (needsCategories) viewModel.refreshCategoriesIfNeeded() else articles.refresh()
         },
         modifier = Modifier.fillMaxSize(),
@@ -67,43 +85,86 @@ fun ArticleFeedScreen(
                 contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 112.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                item(key = "introduction", contentType = "introduction") { FeedIntroduction(section, onExplore) }
+                if (section == "home") {
+                    if (banners.isNotEmpty()) {
+                        item(key = "banner", contentType = "banner") {
+                            BannerCarousel(
+                                banners = banners,
+                                onBannerClick = { banner ->
+                                    onTopicClick(
+                                        Article(
+                                            id = null,
+                                            title = banner.title.ifBlank { "精选内容" },
+                                            link = banner.url,
+                                            desc = banner.desc,
+                                        )
+                                    )
+                                },
+                            )
+                        }
+                    }
+                    item(key = "quick-actions", contentType = "quick-actions") {
+                        HomeQuickActionsRow(
+                            onOpenSearch = onOpenSearch,
+                            onOpenCollect = onOpenCollect,
+                            onOpenCoinRank = onOpenCoinRank,
+                            onOpenProjects = onOpenProjects,
+                        )
+                    }
+                } else {
+                    item(key = "editorial-header", contentType = "header") {
+                        FeedEditorialHeader(section)
+                    }
+                }
+
                 if (isProjects && categories.items.isNotEmpty()) {
                     item(key = "categories", contentType = "categories") {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             FeedSectionHeading("探索分类", "${categories.items.size} 个方向")
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            LazyRow(
+                                state = categoryRowState,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
                                 items(categories.items, key = { it.id }) { category ->
                                     FilterChip(
                                         selected = categories.selectedId == category.id,
                                         onClick = { viewModel.selectCategory(category.id) },
                                         label = { Text(category.name) },
-                                        modifier = Modifier.heightIn(min = 48.dp),
+                                        modifier = Modifier.heightIn(min = 44.dp),
                                     )
                                 }
                             }
                         }
                     }
                 }
+
                 when {
                     needsCategories -> item(key = "categories-state") {
-                        FeedPlaceholder(
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
-                            loading = categories.loading,
-                            title = if (categories.error != null) "分类加载失败" else "暂无项目分类",
-                            message = categories.error ?: "稍后再来发现好项目",
-                            onRetry = categories.error?.let { { viewModel.retryCategories() } },
-                        )
+                        if (categories.loading) {
+                            FeedLoadingIndicator()
+                        } else {
+                            FeedPlaceholder(
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
+                                loading = false,
+                                title = if (categories.error != null) "分类加载失败" else "暂无项目分类",
+                                message = categories.error ?: "稍后再来发现好项目",
+                                onRetry = categories.error?.let { { viewModel.retryCategories() } },
+                            )
+                        }
                     }
                     empty -> item(key = "feed-state") {
                         val error = refreshError ?: appendError
-                        FeedPlaceholder(
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
-                            loading = refresh is LoadState.Loading || append is LoadState.Loading,
-                            title = if (error != null) "内容加载失败" else "暂无内容",
-                            message = error ?: if (isProjects) "这个分类还没有项目，试试其他分类或稍后再来" else "暂时没有文章，稍后再来看看",
-                            onRetry = error?.let { { articles.retry() } },
-                        )
+                        if (refresh is LoadState.Loading || append is LoadState.Loading) {
+                            FeedLoadingIndicator()
+                        } else {
+                            FeedPlaceholder(
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
+                                loading = false,
+                                title = if (error != null) "内容加载失败" else "暂无内容",
+                                message = error ?: if (isProjects) "这个分类还没有项目，试试其他分类或稍后再来" else "暂时没有文章，稍后再来看看",
+                                onRetry = error?.let { { articles.retry() } },
+                            )
+                        }
                     }
                     else -> {
                         if (refreshError != null) item(key = "refresh-error") {
@@ -119,10 +180,27 @@ fun ArticleFeedScreen(
                                 "已载入 ${articles.itemCount} 篇",
                             )
                         }
-                        // Accessing LazyPagingItems by index supplies Paging 3 viewport hints.
-                        // Paging handles prefetch, duplicate requests, cancellation and retry.
                         items(count = articles.itemCount, key = articles.itemKey { it.feedKey }) { index ->
-                            articles[index]?.let { ArticleCard(it, isProject = isProjects, featured = section == "home" && it.pinned, onTopicClick = onTopicClick) }
+                            articles[index]?.let { item ->
+                                val targetId = item.collectArticleId
+                                val isCollected = (targetId != null && targetId in sessionState.collectedIds) ||
+                                    (item.collect == true && sessionState.isLoggedIn)
+                                ArticleCard(
+                                    article = item,
+                                    isProject = isProjects,
+                                    featured = section == "home" && item.pinned,
+                                    isCollected = isCollected,
+                                    onTopicClick = onTopicClick,
+                                    onToggleCollect = { clicked ->
+                                        val id = clicked.collectArticleId ?: return@ArticleCard
+                                        scope.launch {
+                                            if (!sessionRepository.toggleCollect(id)) {
+                                                onOpenAuth()
+                                            }
+                                        }
+                                    },
+                                )
+                            }
                         }
                         item(key = "pagination") {
                             when {
@@ -151,8 +229,9 @@ fun ArticleFeedScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun FeedPlaceholder(
+internal fun FeedPlaceholder(
     title: String,
     message: String,
     loading: Boolean,
@@ -165,13 +244,15 @@ private fun FeedPlaceholder(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (loading) {
-            CircularProgressIndicator(Modifier.size(32.dp))
-            Text("正在加载", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            ContainedLoadingIndicator()
         } else {
             val icon: ImageVector = if (onRetry != null) Icons.Rounded.CloudOff else Icons.Rounded.Inbox
-            Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-                Icon(icon, contentDescription = null, modifier = Modifier.padding(20.dp).size(36.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Text(title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
             Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
             if (onRetry != null) OutlinedButton(onClick = onRetry) { Text("重新加载") }
@@ -180,11 +261,15 @@ private fun FeedPlaceholder(
 }
 
 @Composable
-private fun FeedError(message: String, onRetry: () -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.errorContainer, shape = MaterialTheme.shapes.medium) {
-        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(message, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            TextButton(onClick = onRetry) { Text("重试") }
-        }
+internal fun FeedError(message: String, onRetry: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        ListItem(
+            headlineContent = { Text(message, style = MaterialTheme.typography.bodyMedium) },
+            trailingContent = { TextButton(onClick = onRetry) { Text("重试") } },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        )
     }
 }

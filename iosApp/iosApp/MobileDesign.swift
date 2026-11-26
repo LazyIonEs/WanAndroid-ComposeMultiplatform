@@ -1,98 +1,41 @@
+import SafariServices
 import SwiftUI
 
-/// Shared visual language, expressed with native, dynamically sized SwiftUI views.
 enum ReadingStyle {
-    static let canvas = Color(uiColor: .systemGroupedBackground)
-    static let card = Color(uiColor: .secondarySystemGroupedBackground)
-    static let radius: CGFloat = 24
+    static let gold = Color(red: 0.85, green: 0.61, blue: 0.15)
+    static let silver = Color(red: 0.56, green: 0.61, blue: 0.66)
+    static let bronze = Color(red: 0.75, green: 0.48, blue: 0.29)
+    static let heartRed = Color(red: 0.90, green: 0.28, blue: 0.30)
+    static let hotOrange = Color(red: 0.92, green: 0.35, blue: 0.05)
 }
 
-struct FeedIntroduction: View {
-    let section: AppSection
-    let onExplore: (AppSection) -> Void
-
-    private var eyebrow: String {
-        switch section {
-        case .home: "给开发者的阅读空间"
-        case .plaza: "社区广场"
-        case .projects: "开源灵感库"
-        case .settings: "阅读偏好"
-        }
-    }
-    private var headline: String {
-        switch section {
-        case .home: "保持好奇，持续进步。"
-        case .plaza: "交流，让灵感发生。"
-        case .projects: "好项目，值得被发现。"
-        case .settings: "让阅读更合心意"
-        }
-    }
-    private var subtitle: String {
-        switch section {
-        case .home: "读一篇好文章，让今天的积累成为明天的灵感。"
-        case .plaza: "来自开发者的实践、思考与新鲜分享。"
-        case .projects: "发现实用工具与开源作品，从好代码中学习。"
-        case .settings: "留一点时间给知识与灵感。"
-        }
-    }
+struct HomeQuickActionsView: View {
+    let onOpenCoinRank: () -> Void
+    let onOpenCollect: () -> Void
+    let onOpenProjects: () -> Void
+    let onOpenPlaza: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(eyebrow).font(.subheadline.weight(.medium)).foregroundStyle(Color.accentColor)
-            Text(headline)
-                .font(.title2.bold())
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader)
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .lineSpacing(4)
-                .fixedSize(horizontal: false, vertical: true)
-            if section == .home {
-                HStack(alignment: .top, spacing: 12) {
-                    exploreCard(.plaza, title: "社区广场", subtitle: "发现不同的解法", symbol: "bubble.left.and.bubble.right")
-                    exploreCard(.projects, title: "开源项目", subtitle: "从灵感到实践", symbol: "curlybraces")
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                Button(action: onOpenCoinRank) {
+                    Label("积分排行", systemImage: "trophy.fill")
                 }
-                .padding(.top, 10)
+                Button(action: onOpenCollect) {
+                    Label("我的收藏", systemImage: "heart.fill")
+                }
+                Button(action: onOpenProjects) {
+                    Label("开源项目", systemImage: "curlybraces")
+                }
+                Button(action: onOpenPlaza) {
+                    Label("社区广场", systemImage: "bubble.left.and.bubble.right.fill")
+                }
             }
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+            .controlSize(.regular)
+            .padding(.vertical, 2)
         }
-        .padding(.vertical, 10)
-    }
-
-    private func exploreCard(_ destination: AppSection, title: String, subtitle: String, symbol: String) -> some View {
-        Button { onExplore(destination) } label: {
-            VStack(alignment: .leading, spacing: 7) {
-                Image(systemName: symbol).font(.title3).foregroundStyle(Color.accentColor).accessibilityHidden(true)
-                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
-                Text(subtitle).font(.caption).foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .background(ReadingStyle.card, in: RoundedRectangle(cornerRadius: 20))
-        }
-        .buttonStyle(.plain)
-        .accessibilityHint("切换到\(title)")
-    }
-}
-
-struct FeedSectionHeading: View {
-    let title: String
-    let detail: String
-
-    var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(title).font(.headline).accessibilityAddTraits(.isHeader)
-                Spacer(minLength: 12)
-                Text(detail).font(.caption).foregroundStyle(.secondary)
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.headline).accessibilityAddTraits(.isHeader)
-                Text(detail).font(.caption).foregroundStyle(.secondary)
-            }
-        }
-        .padding(.top, 10)
-        .padding(.bottom, 2)
     }
 }
 
@@ -100,66 +43,123 @@ struct ArticleRow: View {
     let article: NativeArticle
     let showImage: Bool
     let featured: Bool
+    let isCollected: Bool
+    var highlightQuery: String = ""
+    var onToggleCollect: (() -> Void)?
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 6) { badges }
-                VStack(alignment: .leading, spacing: 6) { badges }
+        VStack(alignment: .leading, spacing: 8) {
+            if hasMetadata {
+                HStack(spacing: 6) {
+                    if article.pinned == true {
+                        Label("置顶", systemImage: "pin.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    if article.fresh == true {
+                        Text("新")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(ReadingStyle.hotOrange)
+                    }
+                    if let meta = metadataText {
+                        Text(meta)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
             }
-            HStack(alignment: .top, spacing: 14) {
-                VStack(alignment: .leading, spacing: 9) {
-                    Text(article.title)
-                        .font(featured ? .title3.bold() : .headline)
+
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(highlightedTitle)
+                        .font(featured ? .headline.bold() : .headline)
                         .foregroundStyle(.primary)
-                        .lineSpacing(4)
+                        .lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
                     if let description = article.desc, !description.isEmpty {
                         Text(description)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                            .lineSpacing(4)
                             .lineLimit(3)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+
                 if showImage && !dynamicTypeSize.isAccessibilitySize { projectImage }
             }
-            Rectangle().fill(Color.primary.opacity(0.07)).frame(height: 1).accessibilityHidden(true)
-            HStack(spacing: 9) {
-                Text(String(article.displayAuthor.prefix(1)).uppercased())
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.accentColor)
-                    .frame(width: 32, height: 32)
-                    .background(Color.accentColor.opacity(0.1), in: Circle())
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(article.displayAuthor).font(.caption.weight(.medium)).foregroundStyle(.primary).lineLimit(1)
-                    if !article.displayDate.isEmpty {
-                        Text(article.displayDate).font(.caption2).foregroundStyle(.secondary)
-                    }
+
+            HStack(spacing: 8) {
+                Label(article.displayAuthor, systemImage: "person.circle")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+
+                if !article.displayDate.isEmpty {
+                    Text("·")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                    Text(article.displayDate)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
+
                 Spacer(minLength: 8)
-                Image(systemName: "arrow.up.right").font(.caption.weight(.semibold)).foregroundStyle(.secondary).accessibilityHidden(true)
+
+                if let onToggleCollect, article.collectTargetID != nil {
+                    Button(action: onToggleCollect) {
+                        Image(systemName: isCollected ? "heart.fill" : "heart")
+                            .foregroundStyle(isCollected ? ReadingStyle.heartRed : .secondary)
+                            .symbolEffect(.bounce, value: isCollected)
+                    }
+                    .buttonStyle(.borderless)
+                    .sensoryFeedback(.impact(flexibility: .soft), trigger: isCollected)
+                    .accessibilityLabel(isCollected ? "取消收藏" : "收藏")
+                }
             }
+            .padding(.top, 2)
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(featured ? Color.accentColor.opacity(0.12) : ReadingStyle.card, in: RoundedRectangle(cornerRadius: ReadingStyle.radius))
-        .contentShape(RoundedRectangle(cornerRadius: ReadingStyle.radius))
-        .accessibilityElement(children: .combine)
+        .padding(.vertical, 4)
     }
 
-    @ViewBuilder
-    private var badges: some View {
-        if article.pinned == true {
-            Label("站内置顶", systemImage: "pin.fill").badgeStyle(color: .accentColor)
+    private var hasMetadata: Bool {
+        article.pinned == true || article.fresh == true || metadataText != nil
+    }
+
+    private var metadataText: String? {
+        var parts: [String] = []
+        let chapters = [article.superChapterName, article.chapterName]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        if let first = chapters.first {
+            parts.append(chapters.count > 1 && chapters[1] != first ? "\(first) · \(chapters[1])" : first)
         }
-        if article.fresh == true { Text("新").badgeStyle(color: .accentColor) }
-        if let category = article.chapterName, !category.isEmpty {
-            Text(category).badgeStyle(color: .secondary)
+        if let tags = article.tags?.prefix(2) {
+            for tag in tags {
+                if let name = tag.name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+                    parts.append(name)
+                }
+            }
         }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    private var highlightedTitle: AttributedString {
+        var result = AttributedString(article.title)
+        let tokens = highlightQuery.split(whereSeparator: { $0.isWhitespace }).map(String.init)
+        guard !tokens.isEmpty else { return result }
+        for token in tokens where !token.isEmpty {
+            var searchRange = result.startIndex..<result.endIndex
+            while let range = result[searchRange].range(of: token, options: [.caseInsensitive]) {
+                result[range].foregroundColor = .accentColor
+                result[range].font = .headline.bold()
+                searchRange = range.upperBound..<result.endIndex
+            }
+        }
+        return result
     }
 
     private var projectImage: some View {
@@ -168,24 +168,27 @@ struct ArticleRow: View {
                 image.resizable().scaledToFill()
             } else {
                 Image(systemName: "curlybraces")
-                    .font(.title2.weight(.medium))
+                    .font(.title3)
                     .foregroundStyle(Color.accentColor)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.accentColor.opacity(0.09))
             }
         }
-        .frame(width: 64, height: 76)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .frame(width: 64, height: 86)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
         .accessibilityHidden(true)
     }
 }
 
-private extension View {
-    func badgeStyle(color: Color) -> some View {
-        font(.caption2.weight(.medium))
-            .foregroundStyle(color)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
-            .background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: 7))
+/// System browser supplies article rendering, navigation, sharing and Safari hand-off.
+struct ArticleBrowser: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let configuration = SFSafariViewController.Configuration()
+        configuration.entersReaderIfAvailable = false
+        return SFSafariViewController(url: url, configuration: configuration)
     }
+
+    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
 }

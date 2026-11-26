@@ -1,129 +1,387 @@
 package org.lazy.wanandroid.feature.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.Forum
+import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.PushPin
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import org.lazy.wanandroid.collectArticleId
 import org.lazy.wanandroid.core.network.model.Article
+import org.lazy.wanandroid.theme.WanAccents
 
 @Composable
-internal fun FeedIntroduction(section: String, onExplore: ((String) -> Unit)?) {
-    Column(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(
-            when (section) { "plaza" -> "社区广场"; "projects" -> "开源灵感库"; else -> "给开发者的阅读空间" },
-            style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            when (section) { "plaza" -> "交流，让灵感发生。"; "projects" -> "好项目，值得被发现。"; else -> "保持好奇，持续进步。" },
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.semantics { heading() },
-        )
-        Text(
-            when (section) {
-                "plaza" -> "来自开发者的实践、思考与新鲜分享。"
-                "projects" -> "发现实用工具与开源作品，从好代码中学习。"
-                else -> "读一篇好文章，让今天的积累成为明天的灵感。"
-            },
-            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (section == "home" && onExplore != null) {
-            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                ExploreCard("社区广场", "发现不同的解法", Icons.Rounded.Forum, Modifier.weight(1f)) { onExplore("plaza") }
-                ExploreCard("开源项目", "从灵感到实践", Icons.Rounded.Code, Modifier.weight(1f)) { onExplore("projects") }
-            }
+internal fun HomeQuickActionsRow(
+    onOpenSearch: () -> Unit,
+    onOpenCollect: () -> Unit,
+    onOpenCoinRank: () -> Unit,
+    onOpenProjects: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyRow(
+        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        item(key = "search") {
+            ElevatedAssistChip(
+                onClick = onOpenSearch,
+                label = { Text("热词搜索") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Search,
+                        contentDescription = null,
+                        modifier = Modifier.size(AssistChipDefaults.IconSize),
+                    )
+                },
+            )
+        }
+        item(key = "collect") {
+            ElevatedAssistChip(
+                onClick = onOpenCollect,
+                label = { Text("我的收藏") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Favorite,
+                        contentDescription = null,
+                        modifier = Modifier.size(AssistChipDefaults.IconSize),
+                        tint = WanAccents.HeartRed,
+                    )
+                },
+            )
+        }
+        item(key = "coin") {
+            ElevatedAssistChip(
+                onClick = onOpenCoinRank,
+                label = { Text("积分排行") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.EmojiEvents,
+                        contentDescription = null,
+                        modifier = Modifier.size(AssistChipDefaults.IconSize),
+                        tint = WanAccents.Gold,
+                    )
+                },
+            )
+        }
+        item(key = "projects") {
+            ElevatedAssistChip(
+                onClick = onOpenProjects,
+                label = { Text("开源项目") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Widgets,
+                        contentDescription = null,
+                        modifier = Modifier.size(AssistChipDefaults.IconSize),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
+            )
         }
     }
 }
 
 @Composable
-private fun ExploreCard(title: String, subtitle: String, icon: ImageVector, modifier: Modifier, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Icon(icon, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+internal fun FeedEditorialHeader(section: String) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = when (section) {
+                "plaza" -> "社区动态"
+                "projects" -> "开源灵感"
+                else -> "每日精选"
+            },
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = when (section) {
+                "plaza" -> "发现开发者的最新分享"
+                "projects" -> "精选开源项目与实践"
+                else -> "保持好奇，持续进步"
+            },
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.semantics { heading() },
+        )
     }
 }
 
 @Composable
 internal fun FeedSectionHeading(title: String, detail: String? = null) {
-    FlowRow(
-        modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
-        if (detail != null) Text(detail, modifier = Modifier.align(Alignment.CenterVertically), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.semantics { heading() },
+        )
+        if (detail != null) {
+            Badge(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ) {
+                Text(detail, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+            }
+        }
     }
 }
 
 @Composable
-internal fun ArticleCard(article: Article, isProject: Boolean, featured: Boolean = false, onTopicClick: (Article) -> Unit) {
+internal fun ArticleCard(
+    article: Article,
+    isProject: Boolean,
+    featured: Boolean = false,
+    isCollected: Boolean = false,
+    highlightQuery: String = "",
+    onTopicClick: (Article) -> Unit,
+    onToggleCollect: ((Article) -> Unit)? = null,
+) {
     val colors = MaterialTheme.colorScheme
     val foreground = if (featured) colors.onPrimaryContainer else colors.onSurface
-    val secondary = if (featured) colors.onPrimaryContainer.copy(alpha = 0.8f) else colors.onSurfaceVariant
+    val secondary = if (featured) colors.onPrimaryContainer.copy(alpha = 0.78f) else colors.onSurfaceVariant
     val author = article.author?.takeIf { it.isNotBlank() } ?: article.shareUser?.takeIf { it.isNotBlank() } ?: "匿名分享"
     val date = article.niceDate?.takeIf { it.isNotBlank() } ?: article.niceShareDate.orEmpty()
-    Card(
-        onClick = { onTopicClick(article) },
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = if (featured) colors.primaryContainer else colors.surfaceContainerLow, contentColor = foreground),
-    ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (article.pinned) ArticleBadge("站内置顶", if (featured) foreground else colors.primary, Icons.Rounded.PushPin)
-                if (article.fresh == true) ArticleBadge("新", if (featured) foreground else colors.tertiary)
-                article.chapterName?.takeIf { it.isNotBlank() }?.let { ArticleBadge(it, secondary) }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
-                if (isProject) Surface(shape = RoundedCornerShape(14.dp), color = colors.secondaryContainer) {
-                    Icon(Icons.Rounded.Code, null, Modifier.padding(12.dp).size(24.dp), tint = colors.onSecondaryContainer)
-                }
-                Text(article.title, modifier = Modifier.weight(1f), style = if (featured) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium)
-            }
-            article.desc?.takeIf { it.isNotBlank() }?.let {
-                Text(it, style = MaterialTheme.typography.bodyMedium, color = secondary, maxLines = 3, overflow = TextOverflow.Ellipsis)
-            }
-            HorizontalDivider(color = foreground.copy(alpha = 0.08f))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Surface(shape = CircleShape, color = if (featured) colors.primary.copy(alpha = 0.12f) else colors.secondaryContainer) {
-                    Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) {
-                        Text(author.take(1).uppercase(), style = MaterialTheme.typography.labelMedium, color = if (featured) foreground else colors.onSecondaryContainer)
+    val hasCoverImage = isProject && !article.envelopePic.isNullOrBlank()
+
+    val cardContent: @Composable ColumnScope.() -> Unit = {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                if (article.pinned) {
+                    Badge(
+                        containerColor = if (featured) colors.primary else colors.primaryContainer,
+                        contentColor = if (featured) colors.onPrimary else colors.onPrimaryContainer,
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        ) {
+                            Icon(Icons.Rounded.PushPin, null, Modifier.size(11.dp))
+                            Text("站内置顶")
+                        }
                     }
                 }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(author, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    if (date.isNotBlank()) Text(date, style = MaterialTheme.typography.bodySmall, color = secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (article.fresh == true) {
+                    Badge(
+                        containerColor = WanAccents.HotOrange.copy(alpha = 0.14f),
+                        contentColor = WanAccents.HotOrange,
+                    ) {
+                        Text("新", modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                    }
                 }
-                Icon(Icons.AutoMirrored.Rounded.ArrowForward, null, Modifier.size(18.dp), tint = secondary)
+                val chapterLabel = listOfNotNull(
+                    article.superChapterName?.takeIf { it.isNotBlank() },
+                    article.chapterName?.takeIf { it.isNotBlank() && it != article.superChapterName },
+                ).joinToString(" · ")
+                if (chapterLabel.isNotBlank()) {
+                    Badge(
+                        containerColor = colors.surfaceContainerHighest,
+                        contentColor = secondary,
+                    ) {
+                        Text(chapterLabel, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                    }
+                }
+                article.tags?.take(2)?.forEach { tag ->
+                    tag.name?.takeIf { it.isNotBlank() }?.let { tagName ->
+                        Badge(
+                            containerColor = colors.secondaryContainer,
+                            contentColor = colors.onSecondaryContainer,
+                        ) {
+                            Text(tagName, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                        }
+                    }
+                }
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    val titleStyle = if (featured) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium
+                    if (highlightQuery.isNotBlank()) {
+                        Text(
+                            text = buildHighlightedText(article.title, highlightQuery, colors.primary),
+                            style = titleStyle,
+                        )
+                    } else {
+                        Text(text = article.title, style = titleStyle)
+                    }
+                    article.desc?.takeIf { it.isNotBlank() }?.let { desc ->
+                        Text(
+                            text = desc,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = secondary,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+                if (hasCoverImage) {
+                    AsyncImage(
+                        model = article.envelopePic,
+                        contentDescription = article.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(width = 76.dp, height = 104.dp)
+                            .clip(RoundedCornerShape(14.dp)),
+                    )
+                } else if (isProject) {
+                    Icon(
+                        imageVector = Icons.Rounded.Code,
+                        contentDescription = null,
+                        modifier = Modifier.padding(top = 4.dp).size(28.dp),
+                        tint = colors.primary,
+                    )
+                }
+            }
+
+            HorizontalDivider(color = foreground.copy(alpha = 0.08f))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp),
+                    tint = secondary,
+                )
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                    Text(
+                        text = author,
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (date.isNotBlank()) {
+                        Text(
+                            text = date,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = secondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+                if (onToggleCollect != null && article.collectArticleId != null) {
+                    IconToggleButton(
+                        checked = isCollected,
+                        onCheckedChange = { onToggleCollect(article) },
+                        colors = IconButtonDefaults.iconToggleButtonColors(
+                            checkedContentColor = WanAccents.HeartRed,
+                            contentColor = secondary,
+                        ),
+                    ) {
+                        Icon(
+                            imageVector = if (isCollected) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                            contentDescription = if (isCollected) "取消收藏" else "收藏",
+                        )
+                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = secondary,
+                    )
+                }
             }
         }
     }
+
+    if (featured) {
+        Card(
+            onClick = { onTopicClick(article) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = colors.primaryContainer,
+                contentColor = foreground,
+            ),
+            content = cardContent,
+        )
+    } else {
+        OutlinedCard(
+            onClick = { onTopicClick(article) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(22.dp),
+            content = cardContent,
+        )
+    }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ArticleBadge(text: String, color: Color, icon: ImageVector? = null) {
-    Surface(color = color.copy(alpha = 0.08f), contentColor = color, shape = RoundedCornerShape(7.dp)) {
-        Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (icon != null) Icon(icon, null, Modifier.size(12.dp))
-            Text(text, style = MaterialTheme.typography.labelSmall)
+internal fun FeedLoadingIndicator(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxWidth().heightIn(min = 240.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        ContainedLoadingIndicator()
+    }
+}
+
+private fun buildHighlightedText(text: String, query: String, highlightColor: Color): AnnotatedString {
+    val tokens = query.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+    if (tokens.isEmpty()) return AnnotatedString(text)
+    val lower = text.lowercase()
+    val ranges = mutableListOf<IntRange>()
+    for (token in tokens) {
+        val t = token.lowercase()
+        var index = lower.indexOf(t)
+        while (index >= 0) {
+            ranges += index until (index + t.length)
+            index = lower.indexOf(t, index + t.length)
         }
+    }
+    if (ranges.isEmpty()) return AnnotatedString(text)
+    val sorted = ranges.sortedBy { it.first }
+    return buildAnnotatedString {
+        var cursor = 0
+        for (range in sorted) {
+            if (range.first < cursor) continue
+            if (range.first > cursor) append(text.substring(cursor, range.first))
+            withStyle(SpanStyle(color = highlightColor, fontWeight = FontWeight.Bold)) {
+                append(text.substring(range.first, range.last + 1))
+            }
+            cursor = range.last + 1
+        }
+        if (cursor < text.length) append(text.substring(cursor))
     }
 }

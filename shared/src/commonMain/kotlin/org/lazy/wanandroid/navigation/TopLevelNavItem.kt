@@ -1,39 +1,39 @@
 package org.lazy.wanandroid.navigation
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Widgets
+import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Widgets
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
-import org.jetbrains.compose.resources.DrawableResource
 import org.lazy.wanandroid.feature.navigation.HomeNavKey
 import org.lazy.wanandroid.feature.navigation.PlazaNavKey
 import org.lazy.wanandroid.feature.navigation.ProjectNavKey
-import wanandroid.shared.generated.resources.Res
-import wanandroid.shared.generated.resources.home_24
-import wanandroid.shared.generated.resources.home_24_sel
-import wanandroid.shared.generated.resources.navigation_24
-import wanandroid.shared.generated.resources.navigation_24_sel
-import wanandroid.shared.generated.resources.project_24
-import wanandroid.shared.generated.resources.project_24_sel
 
 data class TopLevelNavItem(
-    val selectedIcon: DrawableResource,
-    val unselectedIcon: DrawableResource,
-    val label: String
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
+    val label: String,
 )
 
 val HOME = TopLevelNavItem(
-    selectedIcon = Res.drawable.home_24_sel,
-    unselectedIcon = Res.drawable.home_24,
+    selectedIcon = Icons.Rounded.Home,
+    unselectedIcon = Icons.Outlined.Home,
     label = "首页",
 )
 
 val PLAZA = TopLevelNavItem(
-    selectedIcon = Res.drawable.navigation_24_sel,
-    unselectedIcon = Res.drawable.navigation_24,
+    selectedIcon = Icons.Rounded.Explore,
+    unselectedIcon = Icons.Outlined.Explore,
     label = "广场",
 )
 
 val PROJECT = TopLevelNavItem(
-    selectedIcon = Res.drawable.project_24_sel,
-    unselectedIcon = Res.drawable.project_24,
+    selectedIcon = Icons.Rounded.Widgets,
+    unselectedIcon = Icons.Outlined.Widgets,
     label = "项目",
 )
 
