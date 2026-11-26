@@ -31,7 +31,9 @@ kotlin {
     }
     android {
         namespace = "org.lazy.wanandroid.logic"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        compileSdk {
+            version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+        }
         minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions {
             jvmTarget = JvmTarget.JVM_21

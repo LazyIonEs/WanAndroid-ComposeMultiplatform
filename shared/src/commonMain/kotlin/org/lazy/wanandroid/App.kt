@@ -6,20 +6,45 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.HorizontalFloatingToolbar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.motionScheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.ToggleButtonSize
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.Typography
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -28,9 +53,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.window.core.layout.WindowSizeClass
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
+import androidx.window.core.layout.WindowSizeClass
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.KoinApplication
 import org.koin.compose.navigation3.koinEntryProvider
@@ -42,7 +67,11 @@ import org.lazy.wanandroid.feature.AppState
 import org.lazy.wanandroid.feature.navigation.ArticleNavKey
 import org.lazy.wanandroid.feature.navigation.SettingsNavKey
 import org.lazy.wanandroid.feature.rememberAppState
-import org.lazy.wanandroid.navigation.*
+import org.lazy.wanandroid.navigation.LocalNavigator
+import org.lazy.wanandroid.navigation.Navigator
+import org.lazy.wanandroid.navigation.TOP_LEVEL_NAV_ITEMS
+import org.lazy.wanandroid.navigation.TOP_LEVEL_NAV_KEYS
+import org.lazy.wanandroid.navigation.toEntries
 import org.lazy.wanandroid.theme.AppTheme
 
 @OptIn(KoinExperimentalAPI::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3AdaptiveApi::class)
@@ -123,7 +152,6 @@ fun App(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun FloatingActionBar(
     enterSecondaryPage: Boolean,
@@ -149,11 +177,7 @@ private fun FloatingActionBar(
                                 navigator.navigate(navKey)
                             }
                         },
-                        shapes = ToggleButtonDefaults.shapes(
-                            ToggleButtonDefaults.roundShape,
-                            ToggleButtonDefaults.roundShape,
-                            ToggleButtonDefaults.roundShape,
-                        )
+                        shapes = ToggleButtonDefaults.shapesFor(ToggleButtonSize.ExtraLarge)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             AnimatedVisibility(

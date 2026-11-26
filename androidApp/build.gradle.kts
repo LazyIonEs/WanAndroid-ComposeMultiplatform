@@ -27,8 +27,9 @@ dependencies {
 
 android {
     namespace = "org.lazy.wanandroid"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
+    compileSdk {
+        version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    }
     defaultConfig {
         applicationId = "org.lazy.wanandroid"
         minSdk = libs.versions.android.minSdk.get().toInt()
